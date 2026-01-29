@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Manager - Player Edition</title>
+    <title>RPG Manager - Advanced Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-dark: #1a1a2e; --panel-bg: #16213e; --accent: #6efaf2; --danger: #ff7676; }
+        :root { --bg-dark: #1a1a2e; --panel-bg: #16213e; --accent: #6efaf2; --danger: #ff4757; --dead: #555; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         
         body { background-color: var(--bg-dark); color: #e6e6e6; min-height: 100vh; padding: 20px; }
@@ -41,13 +41,22 @@
         /* --- FICHAS (ESQUERDA) --- */
         .character-card {
             background: var(--panel-bg); border-radius: 15px; padding: 25px;
-            margin-bottom: 25px; border: 1px solid #3a506b;
+            margin-bottom: 25px; border: 1px solid #3a506b; transition: 0.5s;
         }
-        .char-left-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        
+        /* Efeito de Morte */
+        .character-card.is-dead { border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 71, 87, 0.4); }
+        .character-card.is-dead .char-image-container { filter: grayscale(1) brightness(0.6); border-color: var(--danger); }
+        .character-card.is-dead .hp-bar-fill { background: var(--dead) !important; }
+
+        .char-left-col { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+        .death-icon { position: absolute; top: 40px; font-size: 50px; color: white; opacity: 0; transition: 0.5s; pointer-events: none; z-index: 5; }
+        .is-dead .death-icon { opacity: 0.8; }
+
         .char-header { display: flex; gap: 20px; margin-bottom: 20px; }
         .char-image-container {
             width: 140px; height: 140px; border-radius: 12px; 
-            overflow: hidden; border: 3px solid var(--accent); cursor: pointer;
+            overflow: hidden; border: 3px solid var(--accent); cursor: pointer; transition: 0.5s;
         }
         .char-image-container img { width: 100%; height: 100%; object-fit: cover; }
         
@@ -72,6 +81,7 @@
         .b-d4 { background: #34a853; } .b-d6 { background: #24b6d2; }
         .b-d8 { background: #a142f4; } .b-d10 { background: #d93025; }
         .b-d12 { background: #ea4335; } .b-d20 { background: #f29900; }
+        .b-custom { background: #f1c40f; color: #000 !important; }
     </style>
 </head>
 <body>
@@ -85,9 +95,7 @@
     <div class="dice-3d-section">
         <h3 style="text-align: center; margin-bottom: 10px;">Mesa de Dados</h3>
         <div class="dice-3d-container" id="viewport">
-            <div class="total-display-3d">
-                <span class="total-value-3d" id="res-total">0</span>
-            </div>
+            <div class="total-display-3d"><span class="total-value-3d" id="res-total">0</span></div>
         </div>
         <div class="dice-bar-3d">
             <button class="dice-btn-3d b-d4" onclick="spawnDice('d4')">D4</button>
@@ -96,6 +104,7 @@
             <button class="dice-btn-3d b-d10" onclick="spawnDice('d10')">D10</button>
             <button class="dice-btn-3d b-d12" onclick="spawnDice('d12')">D12</button>
             <button class="dice-btn-3d b-d20" onclick="spawnDice('d20')">D20</button>
+            <button class="dice-btn-3d b-custom" style="grid-column: span 3" onclick="spawnCustomDice()">DADO PERSONALIZADO (D?)</button>
         </div>
         <button class="btn" style="width:100%; margin-top:10px; background:#3a506b; color:white;" onclick="rollAll()">ROLAR TODOS</button>
     </div>
@@ -104,24 +113,26 @@
 <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
 
-    let scene, camera, renderer, raycaster, mouse, diceList = [], quantity = 1;
+    let scene, camera, renderer, raycaster, mouse, diceList = [];
     const container = document.getElementById('viewport');
+    
     const configs = {
         'd4': {geo: new THREE.TetrahedronGeometry(1.2), color: 0x34a853, sides: 4, rot: {x: 0.55, y: 0.8}},
         'd6': {geo: new THREE.BoxGeometry(1.3, 1.3, 1.3), color: 0x24b6d2, sides: 6, rot: {x: 0, y: 0}},
         'd8': {geo: new THREE.OctahedronGeometry(1.3), color: 0xa142f4, sides: 8, rot: {x: 0.35, y: 0.8}},
         'd10': {geo: new THREE.IcosahedronGeometry(1.3, 0), color: 0xd93025, sides: 10, rot: {x: 0, y: 0}},
         'd12': {geo: new THREE.DodecahedronGeometry(1.3), color: 0xea4335, sides: 12, rot: {x: 0, y: 0}},
-        'd20': {geo: new THREE.IcosahedronGeometry(1.3, 0), color: 0xf29900, sides: 20, rot: {x: 0.4, y: 0}}
+        'd20': {geo: new THREE.IcosahedronGeometry(1.3, 0), color: 0xf29900, sides: 20, rot: {x: 0.4, y: 0}},
+        'custom': {geo: new THREE.SphereGeometry(1.1, 8, 8), color: 0xf1c40f, sides: 100, rot: {x: 0, y: 0}}
     };
 
     function init3D() {
         scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
         camera.position.z = 12; renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight); container.appendChild(renderer.domElement);
-        scene.add(new THREE.AmbientLight(0xffffff, 1)); const light = new THREE.DirectionalLight(0xffffff, 0.5);
-        light.position.set(5, 5, 10); scene.add(light); raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
-        
+        scene.add(new THREE.AmbientLight(0xffffff, 1)); 
+        const light = new THREE.DirectionalLight(0xffffff, 0.5); light.position.set(5, 5, 10); scene.add(light);
+        raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
         container.addEventListener('mousedown', (e) => {
             const rect = container.getBoundingClientRect();
             mouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
@@ -142,21 +153,27 @@
             if(Date.now() - start < 600) { dice.rotation.x += 0.4; dice.rotation.y += 0.4; requestAnimationFrame(rollAnim); }
             else { 
                 dice.userData.label.innerText = res; dice.userData.label.style.display = 'block';
-                dice.rotation.set(configs[dice.userData.type].rot.x, configs[dice.userData.type].rot.y, 0);
+                const c = configs[dice.userData.type] || configs['custom'];
+                dice.rotation.set(c.rot.x, c.rot.y, 0);
                 updateTotal();
             }
         };
         rollAnim();
     }
 
-    window.spawnDice = (type) => {
+    window.spawnDice = (type, customSides = null) => {
         if(diceList.length >= 12) return;
         const conf = configs[type];
         const mesh = new THREE.Mesh(conf.geo, new THREE.MeshPhongMaterial({ color: conf.color, flatShading: true, transparent: true }));
         const label = document.createElement('div'); label.className = 'dice-label'; container.appendChild(label);
-        mesh.userData = { type, sides: conf.sides, label, value: 0, isRemoving: false };
+        mesh.userData = { type, sides: customSides || conf.sides, label, value: 0, isRemoving: false };
         scene.add(mesh); diceList.push(mesh);
-        rollSingleDice(mesh); // Rola apenas o clicado
+        rollSingleDice(mesh);
+    }
+
+    window.spawnCustomDice = () => {
+        const s = prompt("Quantas faces tem o dado?", "100");
+        if(s && !isNaN(s)) spawnDice('custom', parseInt(s));
     }
 
     window.rollAll = () => { diceList.forEach(d => rollSingleDice(d)); }
@@ -181,9 +198,7 @@
         requestAnimationFrame(animate);
         diceList.forEach((dice, i) => {
             const tx = (i % 3 - 1) * 2.6; const ty = (1.2 - Math.floor(i / 3)) * 2.6;
-            if(!dice.userData.isRemoving) {
-                dice.position.x += (tx - dice.position.x) * 0.1; dice.position.y += (ty - dice.position.y) * 0.1;
-            }
+            if(!dice.userData.isRemoving) { dice.position.x += (tx - dice.position.x) * 0.1; dice.position.y += (ty - dice.position.y) * 0.1; }
             const vector = dice.position.clone().project(camera);
             dice.userData.label.style.left = `${(vector.x + 1) * container.clientWidth / 2}px`;
             dice.userData.label.style.top = `${(-vector.y + 1) * container.clientHeight / 2}px`;
@@ -198,6 +213,7 @@
             <div class="character-card" id="char-${id}">
                 <div class="char-header">
                     <div class="char-left-col">
+                        <i class="fas fa-skull death-icon"></i>
                         <div class="char-image-container" onclick="document.getElementById('img-${id}').click()">
                             <img src="https://via.placeholder.com/140" id="view-${id}">
                             <input type="file" id="img-${id}" hidden onchange="updateImg(this, '${id}')">
@@ -218,8 +234,14 @@
                     </div>
                     <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp-fill-${id}" style="width: 100%"></div><div class="hp-text-overlay" id="hp-perc-${id}">100%</div></div>
                     <div style="display:flex; gap:10px; margin-top:10px;">
-                        <input type="number" id="hp-max-${id}" class="rpg-input" style="width:80px" value="100" onchange="updateHP('${id}')">
-                        <input type="text" class="rpg-input" id="calc-input-${id}" onkeypress="handleHPCalc(event, '${id}')" placeholder="Dano/Cura (Ex: -10)">
+                        <div style="flex:1">
+                            <span class="rpg-label">VIDA MÁXIMA</span>
+                            <input type="number" id="hp-max-${id}" class="rpg-input" value="100" onchange="setMaxHP('${id}')">
+                        </div>
+                        <div style="flex:2">
+                            <span class="rpg-label">DANO / CURA (ENTER)</span>
+                            <input type="text" class="rpg-input" id="calc-input-${id}" onkeypress="handleHPCalc(event, '${id}')" placeholder="Ex: -10">
+                        </div>
                     </div>
                 </div>
                 <div class="attribute-grid">
@@ -236,15 +258,28 @@
         window[`char_hp_${id}`] = 100;
     };
 
-    window.updateHP = (id) => {
+    window.setMaxHP = (id) => {
+        const newMax = parseInt(document.getElementById(`hp-max-${id}`).value) || 1;
+        window[`char_hp_${id}`] = newMax; // Quando muda o max, a vida vem full
+        updateHPDisplay(id);
+    };
+
+    window.updateHPDisplay = (id) => {
         const max = parseInt(document.getElementById(`hp-max-${id}`).value) || 1;
-        let current = Math.min(max, window[`char_hp_${id}`]);
-        window[`char_hp_${id}`] = current;
+        const current = window[`char_hp_${id}`];
         const perc = Math.round((current / max) * 100);
+        const card = document.getElementById(`char-${id}`);
+        
         document.getElementById(`hp-fill-${id}`).style.width = perc + "%";
         document.getElementById(`hp-text-${id}`).innerText = `${current} / ${max}`;
         document.getElementById(`hp-perc-${id}`).innerText = perc + "%";
+        
+        // Cor da barra
         document.getElementById(`hp-fill-${id}`).style.background = perc < 30 ? "var(--danger)" : "linear-gradient(90deg, #2ecc71, #27ae60)";
+
+        // Sistema de Morte
+        if(current <= 0) card.classList.add('is-dead');
+        else card.classList.remove('is-dead');
     };
 
     window.handleHPCalc = (event, id) => {
@@ -254,10 +289,10 @@
                 if (typeof change === 'number') {
                     const max = parseInt(document.getElementById(`hp-max-${id}`).value);
                     window[`char_hp_${id}`] = Math.max(0, Math.min(max, window[`char_hp_${id}`] + change));
-                    updateHP(id);
+                    updateHPDisplay(id);
                     event.target.value = "";
                 }
-            } catch (e) { alert("Erro matemático!"); }
+            } catch (e) { alert("Cálculo inválido!"); }
         }
     };
 
