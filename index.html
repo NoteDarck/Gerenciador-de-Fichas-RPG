@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Manager - Full Edition</title>
+    <title>RPG Manager - Interactive Dice</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --bg-dark: #1a1a2e; --panel-bg: #16213e; --accent: #6efaf2; --danger: #ff4757; --dead: #555; }
+        :root { --bg-dark: #1a1a2e; --panel-bg: #16213e; --accent: #6efaf2; --danger: #ff4757; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         
         body { background-color: var(--bg-dark); color: #e6e6e6; min-height: 100vh; padding: 20px; }
@@ -26,11 +26,11 @@
         }
         .dice-3d-container {
             width: 100%; height: 350px; background: #202124; border-radius: 8px;
-            position: relative; overflow: hidden;
+            position: relative; overflow: hidden; border: 1px solid #3a506b; cursor: crosshair;
         }
         .dice-label {
             position: absolute; font-weight: bold; color: white; pointer-events: none;
-            text-shadow: 0px 0px 4px rgba(0,0,0,0.8); font-size: 24px; z-index: 10;
+            text-shadow: 0px 0px 6px rgba(0,0,0,1); font-size: 26px; z-index: 100;
             transform: translate(-50%, -50%);
         }
         .total-display-3d { position: absolute; bottom: 10px; right: 15px; text-align: right; pointer-events: none; }
@@ -45,16 +45,9 @@
         }
         
         .character-card.is-dead { 
-            border-color: var(--danger); 
-            opacity: 0.4; 
-            filter: grayscale(1);
-            transform: scale(0.95);
-            box-shadow: 0 0 30px rgba(255, 71, 87, 0.5);
+            border-color: var(--danger); opacity: 0.4; filter: grayscale(1);
+            transform: scale(0.95); box-shadow: 0 0 30px rgba(255, 71, 87, 0.5);
         }
-
-        .char-left-col { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
-        .death-icon { position: absolute; top: 40px; font-size: 50px; color: white; opacity: 0; transition: 0.5s; pointer-events: none; z-index: 5; }
-        .is-dead .death-icon { opacity: 1; }
 
         .char-header { display: flex; gap: 20px; margin-bottom: 20px; }
         .char-image-container {
@@ -65,7 +58,6 @@
         
         .header-inputs { flex: 1; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; }
         .full-row { grid-column: span 3; }
-        
         .rpg-input { background: #0f3460; border: 1px solid #3a506b; color: white; padding: 8px; border-radius: 5px; width: 100%; }
         .rpg-label { font-size: 11px; color: var(--accent); font-weight: bold; display: block; margin-bottom: 2px; }
 
@@ -74,7 +66,6 @@
         .hp-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.4s ease; }
         .hp-text-overlay { position: absolute; width: 100%; text-align: center; font-weight: bold; font-size: 14px; top: 2px; text-shadow: 1px 1px 2px black; }
         
-        /* --- ATRIBUTOS (VOLTARAM) --- */
         .attribute-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 20px 0; }
         .attr-box { background: #0f3460; padding: 10px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--accent); }
         .attr-box input { width: 100%; background: transparent; border: none; color: white; text-align: center; font-size: 18px; font-weight: bold; }
@@ -92,7 +83,8 @@
     </div>
 
     <div class="dice-3d-section">
-        <h3 style="text-align: center; margin-bottom: 10px;">Mesa de Dados</h3>
+        <h3 style="text-align: center; margin-bottom: 5px;">Mesa de Dados</h3>
+        <p style="text-align: center; font-size: 10px; color: var(--accent); margin-bottom: 10px;">Clique no dado para removê-lo</p>
         <div class="dice-3d-container" id="viewport">
             <div class="total-display-3d"><span class="total-value-3d" id="res-total">0</span></div>
         </div>
@@ -106,14 +98,13 @@
             <button class="dice-btn-3d" style="background:#f1c40f; color:#000; grid-column: span 3" onclick="askDiceCount('custom')">DADO PERSONALIZADO (D?)</button>
         </div>
         <button class="btn" style="width:100%; margin-top:10px; background:#3a506b; color:white;" onclick="rollAll()">REROLAR TUDO</button>
-        <button class="btn" style="width:100%; margin-top:5px; background:#555; color:white;" onclick="clearTable()">LIMPAR MESA</button>
     </div>
 </div>
 
 <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
 
-    let scene, camera, renderer, diceList = [];
+    let scene, camera, renderer, diceList = [], raycaster, mouse;
     const container = document.getElementById('viewport');
     
     const configs = {
@@ -133,26 +124,73 @@
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         container.appendChild(renderer.domElement);
-        scene.add(new THREE.AmbientLight(0xffffff, 1));
+        
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const light = new THREE.DirectionalLight(0xffffff, 0.5);
+        light.position.set(5, 5, 10);
+        scene.add(light);
+
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+
+        container.addEventListener('mousedown', onDiceClick);
         animate();
+    }
+
+    function onDiceClick(event) {
+        const rect = container.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(diceList);
+
+        if (intersects.length > 0) {
+            removeDice(intersects[0].object);
+        }
+    }
+
+    function removeDice(dice) {
+        if(dice.userData.isRemoving) return;
+        dice.userData.isRemoving = true;
+        dice.userData.label.style.display = 'none';
+
+        const startScale = dice.scale.x;
+        const startZ = dice.position.z;
+        let startTime = Date.now();
+
+        const anim = () => {
+            let elapsed = Date.now() - startTime;
+            let progress = elapsed / 400; // 400ms animação
+
+            if (progress < 1) {
+                dice.scale.set(startScale * (1 - progress), startScale * (1 - progress), startScale * (1 - progress));
+                dice.position.z = startZ - (progress * 5);
+                requestAnimationFrame(anim);
+            } else {
+                scene.remove(dice);
+                dice.userData.label.remove();
+                diceList = diceList.filter(d => d !== dice);
+                updateTotal();
+            }
+        };
+        anim();
     }
 
     window.askDiceCount = (type) => {
         let sides = null;
         if(type === 'custom') {
-            const s = prompt("Quantas faces tem o dado?");
-            if(!s || isNaN(s)) return;
-            sides = parseInt(s);
+            const s = prompt("Lados?");
+            if(!s) return; sides = parseInt(s);
         }
-        const count = prompt("Quantos dados deseja rodar?", "1");
-        if(count && !isNaN(count)) {
-            const n = Math.min(parseInt(count), 15 - diceList.length);
-            for(let i=0; i<n; i++) spawnDice(type, sides);
+        const count = prompt("Quantos?", "1");
+        if(count) {
+            for(let i=0; i<Math.min(parseInt(count), 12); i++) spawnDice(type, sides);
         }
     }
 
     function spawnDice(type, sides) {
-        const conf = configs[type];
+        const conf = configs[type] || configs['custom'];
         const mesh = new THREE.Mesh(conf.geo, new THREE.MeshPhongMaterial({ color: conf.color, flatShading: true }));
         const label = document.createElement('div'); label.className = 'dice-label'; container.appendChild(label);
         mesh.userData = { sides: sides || conf.sides, label, value: 0 };
@@ -161,28 +199,42 @@
     }
 
     function rollSingle(dice) {
+        if(dice.userData.isRemoving) return;
+        dice.userData.label.style.display = 'none';
         const res = Math.floor(Math.random() * dice.userData.sides) + 1;
-        dice.userData.value = res;
-        dice.userData.label.innerText = res;
-        updateTotal();
+        
+        let start = Date.now();
+        const anim = () => {
+            if (Date.now() - start < 600) {
+                dice.rotation.x += 0.3; dice.rotation.y += 0.3;
+                requestAnimationFrame(anim);
+            } else {
+                dice.userData.value = res;
+                dice.userData.label.innerText = res;
+                dice.userData.label.style.display = 'block';
+                dice.rotation.set(0,0,0);
+                updateTotal();
+            }
+        };
+        anim();
     }
 
     window.rollAll = () => diceList.forEach(d => rollSingle(d));
-    window.clearTable = () => {
-        diceList.forEach(d => { scene.remove(d); d.userData.label.remove(); });
-        diceList = []; updateTotal();
-    }
 
     function updateTotal() {
-        const total = diceList.reduce((acc, d) => acc + d.userData.value, 0);
+        const total = diceList.reduce((acc, d) => acc + (d.userData.isRemoving ? 0 : d.userData.value), 0);
         document.getElementById('res-total').innerText = total;
     }
 
     function animate() {
         requestAnimationFrame(animate);
         diceList.forEach((dice, i) => {
-            const tx = (i % 3 - 1) * 2.6; const ty = (1.2 - Math.floor(i / 3)) * 2.6;
-            dice.position.x += (tx - dice.position.x) * 0.1; dice.position.y += (ty - dice.position.y) * 0.1;
+            if(!dice.userData.isRemoving) {
+                const tx = (i % 4 - 1.5) * 2.5;
+                const ty = (1 - Math.floor(i / 4)) * 2.5;
+                dice.position.x += (tx - dice.position.x) * 0.1;
+                dice.position.y += (ty - dice.position.y) * 0.1;
+            }
             const vector = dice.position.clone().project(camera);
             dice.userData.label.style.left = `${(vector.x + 1) * container.clientWidth / 2}px`;
             dice.userData.label.style.top = `${(-vector.y + 1) * container.clientHeight / 2}px`;
@@ -191,7 +243,7 @@
     }
     init3D();
 
-    // --- LÓGICA DE PERSONAGENS ---
+    // --- PERSONAGENS ---
     const deathSound = new Audio('sino-2deg.mp3');
 
     window.addNewCharacter = () => {
@@ -200,7 +252,6 @@
             <div class="character-card" id="char-${id}">
                 <div class="char-header">
                     <div class="char-left-col">
-                        <i class="fas fa-skull death-icon"></i>
                         <div class="char-image-container" onclick="document.getElementById('img-${id}').click()">
                             <img src="https://via.placeholder.com/140" id="view-${id}">
                             <input type="file" id="img-${id}" hidden onchange="updateImg(this, '${id}')">
@@ -213,26 +264,17 @@
                         <div><span class="rpg-label">RAÇA</span><input type="text" class="rpg-input"></div>
                         <div><span class="rpg-label">NÍVEL</span><input type="number" class="rpg-input" value="1"></div>
                     </div>
-                    <button onclick="document.getElementById('char-${id}').remove()" style="color:red; background:none; border:none; cursor:pointer"><i class="fas fa-trash"></i></button>
                 </div>
-
                 <div class="hp-section">
                     <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px">
-                        <span>PONTOS DE VIDA</span><span id="hp-text-${id}">100 / 100</span>
+                        <span>PV</span><span id="hp-text-${id}">100 / 100</span>
                     </div>
-                    <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp-fill-${id}" style="width: 100%"></div><div class="hp-text-overlay" id="hp-perc-${id}">100%</div></div>
+                    <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp-fill-${id}" style="width: 100%"></div></div>
                     <div style="display:flex; gap:10px; margin-top:10px;">
-                        <div style="flex:1">
-                            <span class="rpg-label">VIDA MÁXIMA</span>
-                            <input type="number" id="hp-max-${id}" class="rpg-input" value="100" onchange="setMaxHP('${id}')">
-                        </div>
-                        <div style="flex:2">
-                            <span class="rpg-label">DANO / CURA (ENTER)</span>
-                            <input type="text" class="rpg-input" onkeypress="handleHP(event, '${id}')" placeholder="Ex: -15">
-                        </div>
+                        <input type="number" id="hp-max-${id}" class="rpg-input" value="100" onchange="updateHPDisplay('${id}')" placeholder="Max">
+                        <input type="text" class="rpg-input" onkeypress="handleHP(event, '${id}')" placeholder="Dano (Enter)">
                     </div>
                 </div>
-
                 <div class="attribute-grid">
                     <div class="attr-box"><div>FOR</div><input type="number" value="10"></div>
                     <div class="attr-box"><div>DES</div><input type="number" value="10"></div>
@@ -244,50 +286,33 @@
             </div>`;
         document.getElementById('charactersList').insertAdjacentHTML('afterbegin', html);
         window[`hp_${id}`] = 100;
-        window[`isDead_${id}`] = false;
-    };
-
-    window.setMaxHP = (id) => {
-        const val = parseInt(document.getElementById(`hp-max-${id}`).value) || 1;
-        window[`hp_${id}`] = val; // Deixa full quando muda o máximo
-        updateHPDisplay(id);
+        window[`dead_${id}`] = false;
     };
 
     window.handleHP = (e, id) => {
         if(e.key === 'Enter') {
-            try {
-                const change = eval(e.target.value);
-                const max = parseInt(document.getElementById(`hp-max-${id}`).value);
-                window[`hp_${id}`] = Math.max(0, Math.min(max, window[`hp_${id}`] + change));
-                updateHPDisplay(id);
-                e.target.value = "";
-            } catch { alert("Cálculo inválido!"); }
+            const val = eval(e.target.value);
+            window[`hp_${id}`] = Math.max(0, window[`hp_${id}`] + val);
+            updateHPDisplay(id);
+            e.target.value = "";
         }
     };
 
     window.updateHPDisplay = (id) => {
         const max = parseInt(document.getElementById(`hp-max-${id}`).value) || 1;
         const current = window[`hp_${id}`];
-        const perc = Math.round((current / max) * 100);
-        const card = document.getElementById(`char-${id}`);
-
+        const perc = (current / max) * 100;
         document.getElementById(`hp-fill-${id}`).style.width = perc + "%";
         document.getElementById(`hp-text-${id}`).innerText = `${current} / ${max}`;
-        document.getElementById(`hp-perc-${id}`).innerText = perc + "%";
 
-        if(current <= 0 && !window[`isDead_${id}`]) {
-            window[`isDead_${id}`] = true;
-            card.classList.add('is-dead');
-            
-            // Som de Morte
-            deathSound.play().catch(() => console.log("Áudio bloqueado"));
-
-            // Espera o tempo do sino e apaga a ficha
+        if(current <= 0 && !window[`dead_${id}`]) {
+            window[`dead_${id}`] = true;
+            document.getElementById(`char-${id}`).classList.add('is-dead');
+            deathSound.play();
             setTimeout(() => {
-                card.style.opacity = "0";
-                card.style.transform = "scale(0.5)";
-                setTimeout(() => card.remove(), 800);
-            }, 3500); 
+                document.getElementById(`char-${id}`).style.opacity = "0";
+                setTimeout(() => document.getElementById(`char-${id}`).remove(), 1000);
+            }, 3000);
         }
     };
 
