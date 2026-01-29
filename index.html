@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Manager - Interactive Dice</title>
+    <title>RPG Master - Edição Definitiva</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --bg-dark: #1a1a2e; --panel-bg: #16213e; --accent: #6efaf2; --danger: #ff4757; }
@@ -61,10 +61,20 @@
         .rpg-input { background: #0f3460; border: 1px solid #3a506b; color: white; padding: 8px; border-radius: 5px; width: 100%; }
         .rpg-label { font-size: 11px; color: var(--accent); font-weight: bold; display: block; margin-bottom: 2px; }
 
+        /* BARRA DE VIDA INTELIGENTE */
         .hp-section { margin: 15px 0; }
-        .hp-bar-bg { height: 24px; background: #0a0a1a; border-radius: 12px; overflow: hidden; border: 1px solid #3a506b; position: relative; }
-        .hp-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #2ecc71, #27ae60); transition: width 0.4s ease; }
-        .hp-text-overlay { position: absolute; width: 100%; text-align: center; font-weight: bold; font-size: 14px; top: 2px; text-shadow: 1px 1px 2px black; }
+        .hp-bar-bg { height: 28px; background: #0a0a1a; border-radius: 6px; overflow: hidden; border: 1px solid #3a506b; position: relative; }
+        .hp-bar-fill { 
+            height: 100%; width: 100%; 
+            background: #2ecc71;
+            transition: width 0.4s ease, background-color 0.4s ease; 
+        }
+        .hp-text-overlay { 
+            position: absolute; width: 100%; text-align: center; 
+            font-weight: bold; font-size: 14px; top: 4px; 
+            text-shadow: 1px 1px 2px black; color: white;
+            z-index: 2;
+        }
         
         .attribute-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 20px 0; }
         .attr-box { background: #0f3460; padding: 10px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--accent); }
@@ -144,25 +154,20 @@
 
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(diceList);
-
-        if (intersects.length > 0) {
-            removeDice(intersects[0].object);
-        }
+        if (intersects.length > 0) removeDice(intersects[0].object);
     }
 
     function removeDice(dice) {
         if(dice.userData.isRemoving) return;
         dice.userData.isRemoving = true;
         dice.userData.label.style.display = 'none';
-
         const startScale = dice.scale.x;
         const startZ = dice.position.z;
         let startTime = Date.now();
 
         const anim = () => {
             let elapsed = Date.now() - startTime;
-            let progress = elapsed / 400; // 400ms animação
-
+            let progress = elapsed / 400;
             if (progress < 1) {
                 dice.scale.set(startScale * (1 - progress), startScale * (1 - progress), startScale * (1 - progress));
                 dice.position.z = startZ - (progress * 5);
@@ -202,7 +207,6 @@
         if(dice.userData.isRemoving) return;
         dice.userData.label.style.display = 'none';
         const res = Math.floor(Math.random() * dice.userData.sides) + 1;
-        
         let start = Date.now();
         const anim = () => {
             if (Date.now() - start < 600) {
@@ -243,7 +247,7 @@
     }
     init3D();
 
-    // --- PERSONAGENS ---
+    // --- LÓGICA DE PERSONAGENS (HP INTELIGENTE) ---
     const deathSound = new Audio('sino-2deg.mp3');
 
     window.addNewCharacter = () => {
@@ -267,12 +271,21 @@
                 </div>
                 <div class="hp-section">
                     <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px">
-                        <span>PV</span><span id="hp-text-${id}">100 / 100</span>
+                        <span>PONTOS DE VIDA</span><span id="hp-text-${id}">100 / 100</span>
                     </div>
-                    <div class="hp-bar-bg"><div class="hp-bar-fill" id="hp-fill-${id}" style="width: 100%"></div></div>
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill" id="hp-fill-${id}" style="width: 100%"></div>
+                        <div class="hp-text-overlay" id="hp-perc-${id}">100%</div>
+                    </div>
                     <div style="display:flex; gap:10px; margin-top:10px;">
-                        <input type="number" id="hp-max-${id}" class="rpg-input" value="100" onchange="updateHPDisplay('${id}')" placeholder="Max">
-                        <input type="text" class="rpg-input" onkeypress="handleHP(event, '${id}')" placeholder="Dano (Enter)">
+                        <div style="flex:1">
+                            <span class="rpg-label">VIDA MÁXIMA</span>
+                            <input type="number" id="hp-max-${id}" class="rpg-input" value="100" oninput="updateHPDisplay('${id}', true)">
+                        </div>
+                        <div style="flex:2">
+                            <span class="rpg-label">DANO / CURA (ENTER)</span>
+                            <input type="text" class="rpg-input" onkeypress="handleHP(event, '${id}')" placeholder="Ex: -20 ou +10">
+                        </div>
                     </div>
                 </div>
                 <div class="attribute-grid">
@@ -291,28 +304,51 @@
 
     window.handleHP = (e, id) => {
         if(e.key === 'Enter') {
-            const val = eval(e.target.value);
-            window[`hp_${id}`] = Math.max(0, window[`hp_${id}`] + val);
-            updateHPDisplay(id);
-            e.target.value = "";
+            try {
+                const val = eval(e.target.value);
+                const max = parseInt(document.getElementById(`hp-max-${id}`).value) || 1;
+                window[`hp_${id}`] = Math.max(0, Math.min(max, window[`hp_${id}`] + val));
+                updateHPDisplay(id);
+                e.target.value = "";
+            } catch { alert("Use números! Ex: -10"); }
         }
     };
 
-    window.updateHPDisplay = (id) => {
-        const max = parseInt(document.getElementById(`hp-max-${id}`).value) || 1;
-        const current = window[`hp_${id}`];
-        const perc = (current / max) * 100;
-        document.getElementById(`hp-fill-${id}`).style.width = perc + "%";
-        document.getElementById(`hp-text-${id}`).innerText = `${current} / ${max}`;
+    window.updateHPDisplay = (id, fromMaxInput = false) => {
+        const maxInput = document.getElementById(`hp-max-${id}`);
+        const max = parseInt(maxInput.value) || 1;
+        
+        // Se mudou a vida máxima via teclado, resetamos o HP atual para o novo máximo
+        if (fromMaxInput) {
+            window[`hp_${id}`] = max;
+        }
 
-        if(current <= 0 && !window[`dead_${id}`]) {
+        const current = window[`hp_${id}`];
+        const perc = Math.max(0, Math.min(100, (current / max) * 100));
+        
+        const barFill = document.getElementById(`hp-fill-${id}`);
+        barFill.style.width = perc + "%";
+        document.getElementById(`hp-text-${id}`).innerText = `${current} / ${max}`;
+        document.getElementById(`hp-perc-${id}`).innerText = Math.round(perc) + "%";
+
+        // CORES INTELIGENTES
+        if (perc > 60) barFill.style.backgroundColor = "#2ecc71"; // Verde
+        else if (perc > 25) barFill.style.backgroundColor = "#f1c40f"; // Amarelo
+        else barFill.style.backgroundColor = "#e74c3c"; // Vermelho
+
+        // Lógica de Morte
+        if(current <= 0 && max > 0 && !window[`dead_${id}`]) {
             window[`dead_${id}`] = true;
-            document.getElementById(`char-${id}`).classList.add('is-dead');
-            deathSound.play();
+            const card = document.getElementById(`char-${id}`);
+            card.classList.add('is-dead');
+            
+            deathSound.play().catch(() => {});
+            
             setTimeout(() => {
-                document.getElementById(`char-${id}`).style.opacity = "0";
-                setTimeout(() => document.getElementById(`char-${id}`).remove(), 1000);
-            }, 3000);
+                card.style.opacity = "0";
+                card.style.transform = "translateY(20px) scale(0.9)";
+                setTimeout(() => card.remove(), 1000);
+            }, 3500);
         }
     };
 
