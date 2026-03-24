@@ -40,7 +40,7 @@
         .img-thumb { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid var(--accent); transition: 0.3s; }
         
         .bar-bg { height: 14px; background: #000; border-radius: 7px; margin-top: 5px; border: 1px solid #333; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--success); width: 100%; transition: width 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        .bar-fill { height: 100%; background: var(--success); width: 100%; transition: width 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28), background-color 0.5s; }
 
         .card-content { max-height: 0; overflow: hidden; transition: 0.5s ease; padding: 0 20px; }
         .char-card.expanded { border-color: var(--accent); }
@@ -81,7 +81,7 @@
     </div>
 
     <aside id="dice-panel">
-        <button class="toggle-btn" onclick="toggleDice()"> < </button>
+        <button class="toggle-btn" onclick="toggleDice()"> &lt; </button>
         <div id="v3d-cont" class="v3d-box">
             <div id="total-val" style="position:absolute; top:10px; left:10px; font-size:35px; font-weight:900; color:var(--accent)">0</div>
         </div>
@@ -103,7 +103,10 @@
 <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
 
-    // --- ENGINE DADOS 3D (RESTAURADA) ---
+    // Gerenciador de estado centralizado para os HPs
+    window.HeroState = {};
+
+    // --- ENGINE DADOS 3D ---
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 280/220, 0.1, 100); camera.position.z = 13;
     const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
@@ -112,7 +115,14 @@
     let diceList = [];
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    const geos = { d4: new THREE.TetrahedronGeometry(1.3), d6: new THREE.BoxGeometry(1.5,1.5,1.5), d8: new THREE.OctahedronGeometry(1.5), d10: new THREE.IcosahedronGeometry(1.5,0), d12: new THREE.DodecahedronGeometry(1.5), d20: new THREE.IcosahedronGeometry(1.5,0) };
+    const geos = { 
+        d4: new THREE.TetrahedronGeometry(1.3), 
+        d6: new THREE.BoxGeometry(1.5,1.5,1.5), 
+        d8: new THREE.OctahedronGeometry(1.5), 
+        d10: new THREE.IcosahedronGeometry(1.5,0), 
+        d12: new THREE.DodecahedronGeometry(1.5), 
+        d20: new THREE.IcosahedronGeometry(1.5,0) 
+    };
 
     window.toggleDice = () => {
         const p = document.getElementById('dice-panel');
@@ -199,8 +209,8 @@
                         <div style="flex:1">
                             <input type="text" class="i-name" placeholder="Nome" value="${data?.name || ''}" oninput="document.getElementById('tag-${id}').innerText=this.value">
                             <div style="display:flex; gap:10px; margin-top:10px">
-                                <div><label style="font-size:10px">Dano/Cura</label><input type="text" onkeypress="combat(event, '${id}')" placeholder="Ex: -10"></div>
-                                <div><label style="font-size:10px">Vida Máx</label><input type="number" id="max-${id}" value="${data?.max || 100}" oninput="changeMax('${id}')"></div>
+                                <div><label style="font-size:10px">Dano/Cura</label><input type="text" onkeypress="combat(event, '${id}')" placeholder="Ex: -10 ou +5"></div>
+                                <div><label style="font-size:10px">Vida Máx</label><input type="number" id="max-${id}" class="i-max" value="${data?.max || 100}" oninput="changeMax('${id}')"></div>
                             </div>
                         </div>
                     </div>
@@ -237,9 +247,13 @@
             </div>`;
         
         document.getElementById('hero-list').prepend(div);
-        window[`hp_cur_${id}`] = data ? parseInt(data.cur) : 100;
+        
+        // Inicializa o estado do personagem
+        window.HeroState[id] = data ? parseInt(data.cur) : 100;
+        
         if(data?.skills) data.skills.forEach(s => addSkill(id, s.n, s.c, s.t, s.d));
         if(data?.inventory) data.inventory.forEach(i => addItem(id, i.n, i.q, i.d));
+        
         calcAttr(id);
         updateHP(id, false);
     };
@@ -275,12 +289,19 @@
     window.updateHP = (id, playSound = true) => {
         const card = document.getElementById(id);
         const max = parseInt(document.getElementById(`max-${id}`).value) || 1;
-        let cur = window[`hp_cur_${id}`];
+        let cur = window.HeroState[id];
         if(cur > max) cur = max;
         
         const pct = (cur / max) * 100;
-        document.getElementById(`bar-${id}`).style.width = Math.max(0, pct) + "%";
+        const barFill = document.getElementById(`bar-${id}`);
+        
+        barFill.style.width = Math.max(0, pct) + "%";
         document.getElementById(`txt-${id}`).innerText = `${cur} / ${max}`;
+
+        // Sistema de cores dinâmicas na barra
+        if(pct > 50) barFill.style.backgroundColor = "var(--success)";
+        else if(pct > 25) barFill.style.backgroundColor = "var(--warn)";
+        else barFill.style.backgroundColor = "var(--danger)";
 
         if(cur <= 0) {
             if(!card.classList.contains('dead')) {
@@ -306,9 +327,19 @@
 
     window.combat = (e, id) => {
         if(e.key === 'Enter') {
-            let v = e.target.value; let c = window[`hp_cur_${id}`];
-            if(v.startsWith('+') || v.startsWith('-')) c += eval(v); else c = parseInt(v);
-            window[`hp_cur_${id}`] = c; updateHP(id, true); e.target.value = "";
+            let v = e.target.value.trim(); 
+            let c = window.HeroState[id];
+            
+            // Aceita formato -10, +5 ou setar direto como 50
+            if(v.startsWith('+') || v.startsWith('-')) {
+                c += parseInt(v) || 0; 
+            } else {
+                c = parseInt(v) || c;
+            }
+            
+            window.HeroState[id] = c; 
+            updateHP(id, true); 
+            e.target.value = "";
         }
     };
 
@@ -328,24 +359,56 @@
         }
     };
 
-    window.changeMax = (id) => { window[`hp_cur_${id}`] = parseInt(document.getElementById(`max-${id}`).value); updateHP(id, false); };
-    window.delHero = (id) => { if(confirm("Apagar permanentemente?")) document.getElementById(id).remove(); };
+    window.changeMax = (id) => { 
+        // Não reseta a vida atual só de mudar o máximo, apenas recalcula a UI
+        updateHP(id, false); 
+    };
+    
+    window.delHero = (id) => { 
+        if(confirm("Apagar permanentemente este personagem?")) {
+            document.getElementById(id).remove();
+            delete window.HeroState[id];
+        }
+    };
 
     window.saveAll = () => {
         const data = [];
         document.querySelectorAll('.char-card').forEach(c => {
-            const skills = []; c.querySelectorAll('#skill-list-'+c.id+' .list-item').forEach(s => skills.push({n:s.querySelector('.s-n').value, c:s.querySelector('.s-c').value, t:s.querySelector('.s-t').value, d:s.querySelector('.s-d').value}));
-            const inventory = []; c.querySelectorAll('#inv-list-'+c.id+' .list-item').forEach(i => inventory.push({n:i.querySelector('.i-n').value, q:i.querySelector('.i-q').value, d:i.querySelector('.i-d').value}));
-            const attrs = []; c.querySelectorAll('.i-attr').forEach(i => attrs.push(i.value));
-            const rb = []; c.querySelectorAll('.i-rb').forEach(i => rb.push(i.value));
-            data.push({ id: c.id, name: c.querySelector('.i-name').value, race: c.querySelector('.i-race').value, max: c.querySelector('.i-max').value, cur: window[`hp_cur_${c.id}`], img: c.querySelector('.img-thumb').src, attrs, rb, skills, inventory });
+            const skills = []; 
+            c.querySelectorAll('#skill-list-'+c.id+' .list-item').forEach(s => skills.push({n:s.querySelector('.s-n').value, c:s.querySelector('.s-c').value, t:s.querySelector('.s-t').value, d:s.querySelector('.s-d').value}));
+            
+            const inventory = []; 
+            c.querySelectorAll('#inv-list-'+c.id+' .list-item').forEach(i => inventory.push({n:i.querySelector('.i-n').value, q:i.querySelector('.i-q').value, d:i.querySelector('.i-d').value}));
+            
+            const attrs = []; 
+            c.querySelectorAll('.i-attr').forEach(i => attrs.push(i.value));
+            
+            const rb = []; 
+            c.querySelectorAll('.i-rb').forEach(i => rb.push(i.value));
+            
+            // Correção no querySelector: agora busca corretamente a classe .i-max
+            data.push({ 
+                id: c.id, 
+                name: c.querySelector('.i-name').value, 
+                race: c.querySelector('.i-race').value, 
+                max: c.querySelector('.i-max').value, 
+                cur: window.HeroState[c.id], 
+                img: c.querySelector('.img-thumb').src, 
+                attrs, 
+                rb, 
+                skills, 
+                inventory 
+            });
         });
         localStorage.setItem('nexus_final_v8', JSON.stringify(data));
-        alert("Sessão Salva!");
+        alert("Sessão Salva com Sucesso!");
     };
 
+    // Carregamento inicial
     const saved = localStorage.getItem('nexus_final_v8');
-    if(saved) JSON.parse(saved).reverse().forEach(d => addNewHero(d));
+    if(saved) {
+        JSON.parse(saved).reverse().forEach(d => addNewHero(d));
+    }
 </script>
 </body>
 </html>
