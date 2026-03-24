@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>RPG NEXUS - THE ULTIMATE GUI</title>
+    <title>RPG NEXUS - 3D DICE GRID SYSTEM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
@@ -13,59 +13,434 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: #e0e0e0; height: 100vh; display: flex; overflow: hidden; }
 
-        #hero-section { flex: 1; padding: 20px; overflow-y: auto; transition: 0.4s; }
-        
-        /* PAINEL DE DADOS */
+        #hero-section { 
+            flex: 1; 
+            padding: 20px; 
+            overflow-y: auto; 
+            transition: 0.4s; 
+        }
+
+        /* GRADE DE PERSONAGENS */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        /* PAINEL DE DADOS COM GRADE DINÂMICA 3D */
         #dice-panel { 
-            width: 320px; background: var(--card); border-left: 2px solid var(--accent); 
-            padding: 20px; display: flex; flex-direction: column; transition: 0.4s;
+            width: 650px;
+            background: var(--card); 
+            border-left: 2px solid var(--accent); 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            transition: 0.4s;
             position: relative;
         }
         #dice-panel.minimized { width: 45px; padding: 10px 5px; }
         #dice-panel.minimized > *:not(.toggle-btn) { display: none; }
-        .toggle-btn { position: absolute; left: -15px; top: 20px; width: 30px; height: 30px; background: var(--accent); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; border: none; font-weight: bold; }
+        .toggle-btn { 
+            position: absolute; 
+            left: -15px; 
+            top: 20px; 
+            width: 30px; 
+            height: 30px; 
+            background: var(--accent); 
+            color: #000; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            z-index: 100; 
+            border: none; 
+            font-weight: bold; 
+        }
 
-        .v3d-box { width: 100%; height: 220px; background: #000; border-radius: 15px; border: 1px solid #222; position: relative; }
-        .d-label { position: absolute; font-weight: 900; color: #fff; pointer-events: none; font-size: 22px; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 6px; border: 1px solid var(--accent); z-index: 5; }
+        /* GRADE DE DADOS 3D DINÂMICA */
+        .dice-grid-container {
+            width: 100%;
+            background: linear-gradient(135deg, #0a0a12 0%, #050508 100%);
+            border-radius: 15px;
+            border: 2px solid var(--accent);
+            overflow: hidden;
+            position: relative;
+            min-height: 450px;
+            max-height: 550px;
+            box-shadow: 0 0 30px rgba(0,242,255,0.2);
+        }
+        
+        .dice-grid {
+            display: grid;
+            gap: 12px;
+            padding: 15px;
+            min-height: 100%;
+        }
+        
+        .dice-cell {
+            aspect-ratio: 1 / 1;
+            background: rgba(0,0,0,0.4);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            border: 1px solid rgba(0,242,255,0.3);
+            /* Limita o tamanho máximo da célula */
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        /* Quando há apenas 1 dado, limita o tamanho */
+        .dice-grid:has(.dice-cell:only-child) {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .dice-grid:has(.dice-cell:only-child) .dice-cell {
+            width: 280px;
+            height: 280px;
+            margin: auto;
+        }
+        
+        .dice-cell:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 25px rgba(0,242,255,0.5);
+            border-color: var(--accent);
+        }
+        
+        .dice-cell canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 10px;
+        }
+        
+        .dice-number-3d {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(24px, 5vw, 48px);
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 10px currentColor;
+            z-index: 10;
+            pointer-events: none;
+            font-family: monospace;
+            background: rgba(0,0,0,0.6);
+            padding: 6px 16px;
+            border-radius: 40px;
+            backdrop-filter: blur(8px);
+            border: 2px solid;
+            white-space: nowrap;
+            animation: numberPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes numberPop {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
+            60% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; }
+        }
+        
+        .dice-cell.rolling {
+            animation: diceShake 0.08s ease-in-out infinite;
+        }
+        
+        @keyframes diceShake {
+            0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+            25% { transform: translateX(-3px) translateY(-2px) rotate(-5deg); }
+            75% { transform: translateX(3px) translateY(2px) rotate(5deg); }
+        }
+        
+        .dice-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .d-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #000;
+            font-size: 14px;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .d-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .d-btn:active {
+            transform: translateY(0);
+        }
 
-        #dice-log { flex: 1; overflow-y: auto; background: #05050a; border-radius: 8px; padding: 10px; border: 1px solid #1a1a1a; font-size: 13px; margin-top: 10px; }
-        .log-entry { border-bottom: 1px solid #111; padding: 5px 0; display: flex; justify-content: space-between; }
+        #dice-log { 
+            flex: 1; 
+            overflow-y: auto; 
+            background: #05050a; 
+            border-radius: 8px; 
+            padding: 10px; 
+            border: 1px solid #1a1a1a; 
+            font-size: 13px; 
+            margin-top: 10px; 
+            max-height: 180px;
+        }
+        .log-entry { 
+            border-bottom: 1px solid #111; 
+            padding: 6px 0; 
+            display: flex; 
+            justify-content: space-between;
+            font-size: 13px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
 
         /* CARDS & MORTE */
-        .char-card { background: var(--card); border: 1px solid var(--border); border-radius: 15px; margin-bottom: 25px; transition: 0.5s; position: relative; }
-        .char-card.dead { filter: grayscale(1); border-color: var(--danger); box-shadow: 0 0 20px rgba(255, 46, 99, 0.2); }
-        .char-card.dead::before { content: "☠️"; position: absolute; top: 10px; right: 10px; font-size: 20px; z-index: 5; }
+        .char-card { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 15px; 
+            transition: 0.5s; 
+            position: relative;
+        }
+        .char-card.dead { 
+            filter: grayscale(0.7); 
+            border-color: var(--danger); 
+            box-shadow: 0 0 20px rgba(255, 46, 99, 0.3);
+            opacity: 0.8;
+        }
+        .char-card.dead::before { 
+            content: "☠️ MORTO ☠️"; 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            font-size: 12px; 
+            z-index: 5;
+            background: rgba(0,0,0,0.7);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: var(--danger);
+        }
         
-        .card-header { padding: 15px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
-        .img-thumb { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid var(--accent); transition: 0.3s; }
+        .card-header { 
+            padding: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .card-header:hover {
+            background: rgba(0,242,255,0.05);
+        }
+        .img-thumb { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 10px; 
+            object-fit: cover; 
+            border: 2px solid var(--accent); 
+        }
         
-        .bar-bg { height: 14px; background: #000; border-radius: 7px; margin-top: 5px; border: 1px solid #333; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--success); width: 100%; transition: width 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28), background-color 0.5s; }
+        .bar-bg { 
+            height: 14px; 
+            background: #000; 
+            border-radius: 7px; 
+            margin-top: 5px; 
+            border: 1px solid #333; 
+            overflow: hidden; 
+        }
+        .bar-fill { 
+            height: 100%; 
+            background: var(--success); 
+            width: 100%; 
+            transition: width 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28), background-color 0.5s; 
+        }
 
-        .card-content { max-height: 0; overflow: hidden; transition: 0.5s ease; padding: 0 20px; }
-        .char-card.expanded { border-color: var(--accent); }
-        .char-card.expanded .card-content { max-height: 3000px; padding-bottom: 20px; }
+        .card-content { 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: 0.5s ease; 
+            padding: 0 20px; 
+        }
+        .char-card.expanded { 
+            border-color: var(--accent); 
+            box-shadow: 0 0 20px rgba(0,242,255,0.2);
+        }
+        .char-card.expanded .card-content { 
+            max-height: 3000px; 
+            padding-bottom: 20px; 
+        }
 
-        /* ABAS */
-        .tab-bar { display: flex; gap: 10px; margin: 15px 0; border-bottom: 1px solid #222; overflow-x: auto; }
-        .tab-btn { background: none; border: none; color: #666; cursor: pointer; padding: 10px; font-weight: bold; font-size: 11px; white-space: nowrap; }
-        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+        .tab-bar { 
+            display: flex; 
+            gap: 10px; 
+            margin: 15px 0; 
+            border-bottom: 1px solid #222; 
+            overflow-x: auto; 
+        }
+        .tab-btn { 
+            background: none; 
+            border: none; 
+            color: #666; 
+            cursor: pointer; 
+            padding: 10px; 
+            font-weight: bold; 
+            font-size: 11px; 
+            white-space: nowrap;
+        }
+        .tab-btn.active { 
+            color: var(--accent); 
+            border-bottom: 2px solid var(--accent); 
+        }
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
 
-        input, textarea, select { background: #05050a; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 6px; outline: none; width: 100%; }
+        input, textarea, select { 
+            background: #05050a; 
+            border: 1px solid #333; 
+            color: #fff; 
+            padding: 8px; 
+            border-radius: 6px; 
+            outline: none; 
+            width: 100%; 
+        }
         input:focus { border-color: var(--accent); }
 
-        /* ATRIBUTOS */
-        .attr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .attr-item { background: #000; padding: 10px; border-radius: 12px; border: 1px solid #222; text-align: center; position: relative; }
-        .attr-mod { position: absolute; top: -5px; right: -5px; background: var(--accent); color: #000; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: 900; }
+        .attr-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+        }
+        .attr-item { 
+            background: #000; 
+            padding: 10px; 
+            border-radius: 12px; 
+            border: 1px solid #222; 
+            text-align: center; 
+            position: relative;
+        }
+        .attr-mod { 
+            position: absolute; 
+            top: -5px; 
+            right: -5px; 
+            background: var(--accent); 
+            color: #000; 
+            padding: 2px 8px; 
+            border-radius: 5px; 
+            font-size: 12px; 
+            font-weight: 900; 
+        }
         
-        /* INVENTARIO E SKILLS */
-        .list-item { background: #05050a; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #222; border-left: 3px solid var(--accent); }
+        .list-item { 
+            background: #05050a; 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-bottom: 8px; 
+            border: 1px solid #222; 
+            border-left: 3px solid var(--accent); 
+        }
 
-        .dice-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 15px; }
-        .d-btn { padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: #000; font-size: 11px; }
+        .total-sum {
+            background: linear-gradient(135deg, var(--accent), #00aaff);
+            color: #000;
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+            display: inline-block;
+            box-shadow: 0 0 20px rgba(0,242,255,0.5);
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,242,255,0.4);
+        }
+        
+        .btn-secondary {
+            background: none;
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-secondary:hover {
+            background: var(--success);
+            color: #000;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #05050a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        
+        .empty-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2a2a3a;
+            font-size: 32px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            border: 1px dashed #2a2a3a;
+        }
+        
+        .clear-btn {
+            color: var(--danger);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .clear-btn:hover {
+            text-shadow: 0 0 10px var(--danger);
+        }
+        
+        /* Ajustes para diferentes quantidades de dados */
+        .dice-grid[data-dice-count="1"] .dice-cell {
+            width: 280px;
+            height: 280px;
+            margin: auto;
+        }
     </style>
 </head>
 <body>
@@ -73,109 +448,446 @@
     <audio id="death-sound" src="sino-2deg.mp3" preload="auto"></audio>
 
     <div id="hero-section">
-        <div style="display:flex; gap:15px; margin-bottom:20px">
-            <button onclick="addNewHero()" style="background:var(--accent); color:#000; padding:12px 25px; border:none; border-radius:8px; font-weight:900; cursor:pointer">+ NOVO PERSONAGEM</button>
-            <button onclick="saveAll()" style="background:none; border:1px solid var(--success); color:var(--success); padding:10px 20px; border-radius:8px; cursor:pointer">SALVAR SESSÃO</button>
+        <div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="addNewHero()">
+                <i class="fas fa-plus"></i> NOVO PERSONAGEM
+            </button>
+            <button class="btn-secondary" onclick="saveAll()">
+                <i class="fas fa-save"></i> SALVAR SESSÃO
+            </button>
+            <button class="btn-secondary" onclick="loadAll()">
+                <i class="fas fa-folder-open"></i> CARREGAR
+            </button>
         </div>
-        <div id="hero-list"></div>
+        <div id="hero-list" class="hero-grid"></div>
     </div>
 
     <aside id="dice-panel">
         <button class="toggle-btn" onclick="toggleDice()"> &lt; </button>
-        <div id="v3d-cont" class="v3d-box">
-            <div id="total-val" style="position:absolute; top:10px; left:10px; font-size:35px; font-weight:900; color:var(--accent)">0</div>
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="color:var(--accent); font-weight:bold;"><i class="fas fa-cubes"></i> DADOS 3D</span>
+            <span class="total-sum" id="total-sum">Total: 0</span>
         </div>
-        <div class="dice-btns">
-            <button class="d-btn" style="background:#4ecca3" onclick="addDice('d4', 4, '#4ecca3')">D4</button>
-            <button class="d-btn" style="background:#45b7d1" onclick="addDice('d6', 6, '#45b7d1')">D6</button>
-            <button class="d-btn" style="background:#a29bfe" onclick="addDice('d8', 8, '#a29bfe')">D8</button>
-            <button class="d-btn" style="background:#ff7675" onclick="addDice('d10', 10, '#ff7675')">D10</button>
-            <button class="d-btn" style="background:#fdcb6e" onclick="addDice('d12', 12, '#fdcb6e')">D12</button>
-            <button class="d-btn" style="background:#00f2ff" onclick="addDice('d20', 20, '#00f2ff')">D20</button>
+        
+        <div class="dice-grid-container" id="dice-grid-container">
+            <div id="dice-grid" class="dice-grid"></div>
         </div>
-        <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:15px; color:#555">
-            <span>HISTÓRICO</span>
-            <span onclick="document.getElementById('dice-log').innerHTML=''" style="color:var(--danger); cursor:pointer">LIMPAR</span>
+        
+        <div class="dice-controls">
+            <button class="d-btn" style="background:#4ecca3" onclick="addDiceToGrid('d4', 4, '#4ecca3')">🎲 D4</button>
+            <button class="d-btn" style="background:#45b7d1" onclick="addDiceToGrid('d6', 6, '#45b7d1')">🎲 D6</button>
+            <button class="d-btn" style="background:#a29bfe" onclick="addDiceToGrid('d8', 8, '#a29bfe')">🎲 D8</button>
+            <button class="d-btn" style="background:#ff7675" onclick="addDiceToGrid('d10', 10, '#ff7675')">🎲 D10</button>
+            <button class="d-btn" style="background:#fdcb6e" onclick="addDiceToGrid('d12', 12, '#fdcb6e')">🎲 D12</button>
+            <button class="d-btn" style="background:#00f2ff" onclick="addDiceToGrid('d20', 20, '#00f2ff')">🎲 D20</button>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin:10px 0; color:#888">
+            <span><i class="fas fa-history"></i> HISTÓRICO</span>
+            <span onclick="clearAllDice()" class="clear-btn">
+                <i class="fas fa-trash"></i> LIMPAR TUDO
+            </span>
         </div>
         <div id="dice-log"></div>
     </aside>
 
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.150.1/build/three.module.js"
+        }
+    }
+</script>
+
 <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
-
-    // Gerenciador de estado centralizado para os HPs
+    import * as THREE from 'three';
+    
+    // Gerenciador de estado
     window.HeroState = {};
-
-    // --- ENGINE DADOS 3D ---
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, 280/220, 0.1, 100); camera.position.z = 13;
-    const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
-    renderer.setSize(280, 220); document.getElementById('v3d-cont').appendChild(renderer.domElement);
-    scene.add(new THREE.AmbientLight(0xffffff, 1.5));
-    let diceList = [];
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    const geos = { 
-        d4: new THREE.TetrahedronGeometry(1.3), 
-        d6: new THREE.BoxGeometry(1.5,1.5,1.5), 
-        d8: new THREE.OctahedronGeometry(1.5), 
-        d10: new THREE.IcosahedronGeometry(1.5,0), 
-        d12: new THREE.DodecahedronGeometry(1.5), 
-        d20: new THREE.IcosahedronGeometry(1.5,0) 
+    
+    // Sistema de Grade 3D de Dados
+    let diceGridData = [];
+    let nextDiceId = 0;
+    let scenes = new Map();
+    
+    // Geometrias dos dados (tamanho otimizado para grade)
+    const geos = {
+        d4: new THREE.TetrahedronGeometry(0.9),
+        d6: new THREE.BoxGeometry(1.0, 1.0, 1.0),
+        d8: new THREE.OctahedronGeometry(0.85),
+        d10: new THREE.IcosahedronGeometry(0.85, 0),
+        d12: new THREE.DodecahedronGeometry(0.85),
+        d20: new THREE.IcosahedronGeometry(0.9, 0)
     };
-
+    
+    // Cria textura com número para cada face (dados com números nas faces)
+    function createNumberTexture(number, color, bgColor = '#ffffff') {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        
+        // Fundo com gradiente
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, bgColor);
+        gradient.addColorStop(1, '#f8f8f8');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Borda decorativa
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 20;
+        ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
+        
+        // Número grande e visível
+        ctx.fillStyle = color;
+        ctx.font = `Bold ${canvas.width * 0.45}px "Segoe UI", "Arial Black", monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 15;
+        ctx.fillText(number.toString(), canvas.width/2, canvas.height/2);
+        
+        // Brilho extra para destacar
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `Bold ${canvas.width * 0.43}px "Segoe UI", "Arial Black", monospace`;
+        ctx.fillText(number.toString(), canvas.width/2 + 4, canvas.height/2 + 4);
+        
+        ctx.fillStyle = color;
+        ctx.font = `Bold ${canvas.width * 0.45}px "Segoe UI", "Arial Black", monospace`;
+        ctx.fillText(number.toString(), canvas.width/2, canvas.height/2);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.anisotropy = 16;
+        return texture;
+    }
+    
+    // Cria dado 3D completo
+    function create3DDice(type, sides, color, value) {
+        const geometry = geos[type];
+        const faceColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9', '#a29bfe', '#fd79a8', '#fdcb6e', '#00cec9', '#e84393', '#6c5ce7'];
+        
+        if (type === 'd6') {
+            const materials = [];
+            for (let i = 1; i <= sides; i++) {
+                const bgColor = faceColors[(i-1) % faceColors.length];
+                const tex = createNumberTexture(i, color, bgColor);
+                materials.push(new THREE.MeshStandardMaterial({
+                    map: tex,
+                    roughness: 0.2,
+                    metalness: 0.1,
+                    emissive: color,
+                    emissiveIntensity: 0.1
+                }));
+            }
+            const mesh = new THREE.Mesh(geometry, materials);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            return mesh;
+        } else {
+            // Para D4, D8, D10, D12, D20 - material sólido com número flutuante
+            const material = new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.25,
+                metalness: 0.15,
+                emissive: color,
+                emissiveIntensity: 0.08,
+                flatShading: true
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            return mesh;
+        }
+    }
+    
+    // Inicializa cena 3D para um dado
+    function initDice3D(cellId, dice) {
+        const container = document.getElementById(cellId);
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        const canvas = document.createElement('canvas');
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.display = 'block';
+        container.appendChild(canvas);
+        
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x0a0a12, 0);
+        renderer.shadowMap.enabled = true;
+        
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+        camera.position.set(1.5, 1.5, 2.2);
+        camera.lookAt(0, 0, 0);
+        
+        // Iluminação aprimorada
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+        
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        mainLight.position.set(2, 3, 2);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+        
+        const fillLight = new THREE.PointLight(0x4466ff, 0.4);
+        fillLight.position.set(-1.5, 1, 2);
+        scene.add(fillLight);
+        
+        const backLight = new THREE.PointLight(0xffaa66, 0.3);
+        backLight.position.set(0, 1.5, -2.5);
+        scene.add(backLight);
+        
+        const rimLight = new THREE.PointLight(0xff66aa, 0.3);
+        rimLight.position.set(1.5, 1, -2);
+        scene.add(rimLight);
+        
+        // Cria o dado
+        const diceMesh = create3DDice(dice.type, dice.sides, dice.color, dice.value);
+        scene.add(diceMesh);
+        
+        // Número flutuante para dados que não são D6
+        let numberLabel = null;
+        if (dice.type !== 'd6' && dice.value) {
+            numberLabel = document.createElement('div');
+            numberLabel.className = 'dice-number-3d';
+            numberLabel.innerText = dice.value;
+            numberLabel.style.borderColor = dice.color;
+            numberLabel.style.color = dice.color;
+            container.appendChild(numberLabel);
+        }
+        
+        // Animação de rotação durante rolagem - ROTAÇÃO COMPLETA EM 3D
+        let animationId = null;
+        let rotX = 0;
+        let rotY = 0;
+        let rotZ = 0;
+        
+        function animate() {
+            if (dice.isRolling) {
+                // Rotação contínua em múltiplos eixos para efeito de dado girando
+                rotX += 0.12;
+                rotY += 0.15;
+                rotZ += 0.08;
+                diceMesh.rotation.x = rotX;
+                diceMesh.rotation.y = rotY;
+                diceMesh.rotation.z = rotZ;
+            }
+            renderer.render(scene, camera);
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        scenes.set(dice.id, {
+            scene, camera, renderer, diceMesh, animationId, numberLabel, container, rotX, rotY, rotZ
+        });
+        
+        // Ajusta tamanho ao redimensionar
+        const resizeObserver = new ResizeObserver(() => {
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+            renderer.setSize(newWidth, newHeight);
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+        });
+        resizeObserver.observe(container);
+    }
+    
+    // Calcula layout da grade baseado no número de dados
+    function calculateGridLayout(count) {
+        if (count === 0) return { cols: 1, rows: 0 };
+        if (count === 1) return { cols: 1, rows: 1 };
+        if (count === 2) return { cols: 2, rows: 1 };
+        if (count === 3) return { cols: 3, rows: 1 };
+        if (count === 4) return { cols: 2, rows: 2 };
+        if (count <= 6) return { cols: 3, rows: 2 };
+        if (count <= 9) return { cols: 3, rows: 3 };
+        if (count <= 12) return { cols: 4, rows: 3 };
+        if (count <= 16) return { cols: 4, rows: 4 };
+        if (count <= 20) return { cols: 5, rows: 4 };
+        return { cols: Math.ceil(Math.sqrt(count)), rows: Math.ceil(count / Math.ceil(Math.sqrt(count))) };
+    }
+    
+    // Renderiza a grade completa
+    function renderGrid() {
+        const gridContainer = document.getElementById('dice-grid');
+        const count = diceGridData.length;
+        const layout = calculateGridLayout(count);
+        
+        if (count === 0) {
+            gridContainer.innerHTML = '<div class="empty-cell" style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; min-height:400px;"><div style="text-align:center;"><i class="fas fa-dice-d20" style="font-size:64px; margin-bottom:15px; color:#2a2a3a;"></i><p style="color:#666;">Clique nos dados acima<br>para adicionar à mesa 3D</p></div></div>';
+            gridContainer.style.gridTemplateColumns = '1fr';
+            gridContainer.style.gridTemplateRows = '1fr';
+            return;
+        }
+        
+        // Para 1 dado, usa um estilo especial com tamanho fixo
+        if (count === 1) {
+            gridContainer.style.display = 'flex';
+            gridContainer.style.justifyContent = 'center';
+            gridContainer.style.alignItems = 'center';
+            gridContainer.style.minHeight = '400px';
+        } else {
+            gridContainer.style.display = 'grid';
+            gridContainer.style.gridTemplateColumns = `repeat(${layout.cols}, 1fr)`;
+            gridContainer.style.gridTemplateRows = `repeat(${layout.rows}, 1fr)`;
+            gridContainer.style.minHeight = 'auto';
+        }
+        
+        const totalCells = layout.cols * layout.rows;
+        let html = '';
+        
+        if (count === 1) {
+            // Layout especial para 1 dado
+            const dice = diceGridData[0];
+            html = `<div class="dice-cell ${dice.isRolling ? 'rolling' : ''}" data-id="${dice.id}" id="dice-cell-${dice.id}" style="width:280px; height:280px; margin:auto;" onclick="removeDice(${dice.id})"></div>`;
+        } else {
+            for (let i = 0; i < totalCells; i++) {
+                const dice = diceGridData[i];
+                if (dice) {
+                    html += `<div class="dice-cell ${dice.isRolling ? 'rolling' : ''}" data-id="${dice.id}" id="dice-cell-${dice.id}" onclick="removeDice(${dice.id})"></div>`;
+                } else {
+                    html += `<div class="empty-cell"><i class="fas fa-circle" style="font-size:20px; opacity:0.3;"></i></div>`;
+                }
+            }
+        }
+        
+        gridContainer.innerHTML = html;
+        
+        // Inicializa cenas 3D para cada dado
+        diceGridData.forEach(dice => {
+            const cellId = `dice-cell-${dice.id}`;
+            const cell = document.getElementById(cellId);
+            if (cell) {
+                initDice3D(cellId, dice);
+            }
+        });
+        
+        updateTotalSum();
+    }
+    
+    // Adiciona dado à grade
+    window.addDiceToGrid = (type, sides, color) => {
+        const result = Math.floor(Math.random() * sides) + 1;
+        
+        const newDice = {
+            id: nextDiceId++,
+            type: type,
+            sides: sides,
+            color: color,
+            value: result,
+            isRolling: true,
+            result: result
+        };
+        
+        diceGridData.push(newDice);
+        renderGrid();
+        
+        // Animação de rolagem com rotação completa 3D
+        let frames = 0;
+        const maxFrames = 32;
+        let rollInterval = setInterval(() => {
+            if (frames >= maxFrames) {
+                clearInterval(rollInterval);
+                
+                const dice = diceGridData.find(d => d.id === newDice.id);
+                if (dice) {
+                    dice.isRolling = false;
+                    
+                    // Remove classe de animação
+                    const cell = document.getElementById(`dice-cell-${dice.id}`);
+                    if (cell) cell.classList.remove('rolling');
+                    
+                    // Atualiza número no dado
+                    const sceneData = scenes.get(dice.id);
+                    if (sceneData && sceneData.numberLabel) {
+                        sceneData.numberLabel.innerText = dice.result;
+                        sceneData.numberLabel.style.animation = 'none';
+                        sceneData.numberLabel.offsetHeight;
+                        sceneData.numberLabel.style.animation = 'numberPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+                    }
+                    
+                    updateTotalSum();
+                    addLog('d' + dice.sides, dice.result);
+                }
+            } else {
+                // Mostra números aleatórios durante rolagem
+                const randomVal = Math.floor(Math.random() * sides) + 1;
+                const sceneData = scenes.get(newDice.id);
+                if (sceneData && sceneData.numberLabel) {
+                    sceneData.numberLabel.innerText = randomVal;
+                }
+                frames++;
+            }
+        }, 38);
+    };
+    
+    // Remove dado da grade
+    window.removeDice = (id) => {
+        const dice = diceGridData.find(d => d.id === id);
+        if (dice) {
+            const sceneData = scenes.get(id);
+            if (sceneData) {
+                if (sceneData.animationId) cancelAnimationFrame(sceneData.animationId);
+                scenes.delete(id);
+            }
+        }
+        diceGridData = diceGridData.filter(d => d.id !== id);
+        renderGrid();
+        updateTotalSum();
+    };
+    
+    // Atualiza soma total
+    function updateTotalSum() {
+        const total = diceGridData.reduce((sum, dice) => sum + (dice.value || 0), 0);
+        const totalEl = document.getElementById('total-sum');
+        totalEl.innerHTML = `Total: ${total}`;
+        if (total > 0) {
+            totalEl.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                totalEl.style.transform = 'scale(1)';
+            }, 200);
+        }
+    }
+    
+    function addLog(type, value) {
+        const logDiv = document.getElementById('dice-log');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span><i class="fas fa-cube"></i> ${type.toUpperCase()}</span><b style="color:var(--accent); font-size:18px;">${value}</b>`;
+        logDiv.prepend(entry);
+        
+        while(logDiv.children.length > 50) {
+            logDiv.removeChild(logDiv.lastChild);
+        }
+    }
+    
+    window.clearAllDice = () => {
+        scenes.forEach((scene, id) => {
+            if (scene.animationId) cancelAnimationFrame(scene.animationId);
+        });
+        scenes.clear();
+        diceGridData = [];
+        renderGrid();
+        updateTotalSum();
+        document.getElementById('dice-log').innerHTML = '';
+    };
+    
     window.toggleDice = () => {
         const p = document.getElementById('dice-panel');
         p.classList.toggle('minimized');
-        p.querySelector('.toggle-btn').innerText = p.classList.contains('minimized') ? '>' : '<';
+        p.querySelector('.toggle-btn').innerHTML = p.classList.contains('minimized') ? '>' : '<';
     };
-
-    window.addDice = (type, sides, color) => {
-        const mesh = new THREE.Mesh(geos[type], new THREE.MeshPhongMaterial({color, flatShading:true}));
-        const lab = document.createElement('div'); lab.className = 'd-label';
-        document.getElementById('v3d-cont').appendChild(lab);
-        mesh.userData = { sides, lab, val: 0 };
-        scene.add(mesh); diceList.push(mesh);
-        
-        const res = Math.floor(Math.random() * sides) + 1;
-        let s = Date.now();
-        const anim = () => {
-            if(Date.now() - s < 600) { mesh.rotation.x += 0.3; mesh.rotation.y += 0.3; requestAnimationFrame(anim); }
-            else { 
-                mesh.rotation.set(0,0,0); mesh.userData.val = res; mesh.userData.lab.innerText = res; 
-                mesh.userData.lab.style.display = 'block'; updateTotal(); addLog(type, res);
-            }
-        }; anim();
-    };
-
-    function addLog(t, v) {
-        const div = document.createElement('div'); div.className = 'log-entry';
-        div.innerHTML = `<span>${t.toUpperCase()}</span><b>${v}</b>`;
-        document.getElementById('dice-log').prepend(div);
-    }
-
-    document.getElementById('v3d-cont').addEventListener('mousedown', (e) => {
-        const r = document.getElementById('v3d-cont').getBoundingClientRect();
-        mouse.x = ((e.clientX - r.left) / 280) * 2 - 1; mouse.y = -((e.clientY - r.top) / 220) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-        const hits = raycaster.intersectObjects(diceList);
-        if(hits.length > 0) { hits[0].object.userData.lab.remove(); scene.remove(hits[0].object); diceList = diceList.filter(d => d !== hits[0].object); updateTotal(); }
-    });
-
-    function updateTotal() { document.getElementById('total-val').innerText = diceList.reduce((a,b)=>a+b.userData.val, 0); }
-
-    function loop() {
-        requestAnimationFrame(loop);
-        diceList.forEach((d, i) => {
-            const tx = (i % 3 - 1) * 3.5; const ty = (1 - Math.floor(i / 3)) * 3.5;
-            d.position.x += (tx - d.position.x) * 0.1; d.position.y += (ty - d.position.y) * 0.1;
-            const v = d.position.clone().project(camera);
-            d.userData.lab.style.left = `${(v.x + 1) * 280 / 2}px`; d.userData.lab.style.top = `${(-v.y + 1) * 220 / 2}px`;
-        });
-        renderer.render(scene, camera);
-    } loop();
-
-    // --- SISTEMA DE PERSONAGEM ---
+    
+    // --- SISTEMA DE PERSONAGEM (MANTIDO DO ORIGINAL) ---
     window.addNewHero = (data = null) => {
         const id = data ? data.id : "h_" + Date.now();
         const div = document.createElement('div');
@@ -248,7 +960,6 @@
         
         document.getElementById('hero-list').prepend(div);
         
-        // Inicializa o estado do personagem
         window.HeroState[id] = data ? parseInt(data.cur) : 100;
         
         if(data?.skills) data.skills.forEach(s => addSkill(id, s.n, s.c, s.t, s.d));
@@ -298,7 +1009,6 @@
         barFill.style.width = Math.max(0, pct) + "%";
         document.getElementById(`txt-${id}`).innerText = `${cur} / ${max}`;
 
-        // Sistema de cores dinâmicas na barra
         if(pct > 50) barFill.style.backgroundColor = "var(--success)";
         else if(pct > 25) barFill.style.backgroundColor = "var(--warn)";
         else barFill.style.backgroundColor = "var(--danger)";
@@ -330,7 +1040,6 @@
             let v = e.target.value.trim(); 
             let c = window.HeroState[id];
             
-            // Aceita formato -10, +5 ou setar direto como 50
             if(v.startsWith('+') || v.startsWith('-')) {
                 c += parseInt(v) || 0; 
             } else {
@@ -360,7 +1069,6 @@
     };
 
     window.changeMax = (id) => { 
-        // Não reseta a vida atual só de mudar o máximo, apenas recalcula a UI
         updateHP(id, false); 
     };
     
@@ -386,7 +1094,6 @@
             const rb = []; 
             c.querySelectorAll('.i-rb').forEach(i => rb.push(i.value));
             
-            // Correção no querySelector: agora busca corretamente a classe .i-max
             data.push({ 
                 id: c.id, 
                 name: c.querySelector('.i-name').value, 
@@ -400,12 +1107,25 @@
                 inventory 
             });
         });
-        localStorage.setItem('nexus_final_v8', JSON.stringify(data));
-        alert("Sessão Salva com Sucesso!");
+        localStorage.setItem('nexus_3d_grid_v4', JSON.stringify(data));
+        alert("✅ Sessão Salva com Sucesso!");
+    };
+    
+    window.loadAll = () => {
+        const saved = localStorage.getItem('nexus_3d_grid_v4');
+        if(saved) {
+            document.getElementById('hero-list').innerHTML = '';
+            JSON.parse(saved).reverse().forEach(d => addNewHero(d));
+            alert("📀 Personagens carregados!");
+        } else {
+            alert("ℹ️ Nenhum save encontrado.");
+        }
     };
 
-    // Carregamento inicial
-    const saved = localStorage.getItem('nexus_final_v8');
+    // Inicializa
+    renderGrid();
+    
+    const saved = localStorage.getItem('nexus_3d_grid_v4');
     if(saved) {
         JSON.parse(saved).reverse().forEach(d => addNewHero(d));
     }
