@@ -13,208 +13,328 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); color: #e0e0e0; height: 100vh; display: flex; overflow: hidden; }
 
-        #hero-section { 
-            flex: 1; 
-            padding: 20px; 
-            overflow-y: auto; 
-            transition: 0.4s; 
+        /* CONTAINER PRINCIPAL COM MÚLTIPLAS PÁGINAS */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
         }
-
-        /* GRADE DE PERSONAGENS */
+        
+        /* PÁGINAS */
+        .page {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .page.active {
+            display: flex;
+        }
+        
+        /* HEADER COM NAVEGAÇÃO */
+        .nav-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(3,3,5,0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+            border-bottom: 1px solid var(--accent);
+        }
+        
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #888;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+            border-radius: 8px;
+        }
+        
+        .nav-btn:hover {
+            color: var(--accent);
+            background: rgba(0,242,255,0.1);
+        }
+        
+        /* ARENA SELECTOR */
+        .arena-selector {
+            margin-top: 70px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .arena-card {
+            background: #05050a;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid #222;
+            min-width: 180px;
+        }
+        
+        .arena-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 5px 20px rgba(0,242,255,0.3);
+        }
+        
+        .arena-card.active {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(0,242,255,0.1), rgba(0,0,0,0.5));
+        }
+        
+        .arena-icon {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+        
+        .arena-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent);
+            margin-top: 10px;
+        }
+        
+        .arena-desc {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        /* CONTEÚDO DA ARENA */
+        .arena-content {
+            margin-top: 70px;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .battle-area {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .combatant-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 20px;
+            width: 320px;
+            text-align: center;
+            border: 2px solid var(--border);
+            transition: 0.3s;
+        }
+        
+        .combatant-card.enemy {
+            border-color: var(--danger);
+        }
+        
+        .combatant-card.player {
+            border-color: var(--success);
+        }
+        
+        .combatant-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), #00aaff);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        
+        .combatant-avatar img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .combatant-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .combatant-hp {
+            background: #000;
+            border-radius: 10px;
+            height: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .combatant-hp-bar {
+            height: 100%;
+            background: var(--success);
+            width: 100%;
+            transition: width 0.5s;
+        }
+        
+        .combatant-hp-text {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .combat-skills {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .combat-skill-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        
+        .combat-skill-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 10px var(--accent);
+        }
+        
+        .combat-log {
+            background: #05050a;
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #222;
+        }
+        
+        .combat-log-entry {
+            padding: 8px;
+            border-bottom: 1px solid #111;
+            font-size: 12px;
+        }
+        
+        .combat-log-entry.damage {
+            color: var(--danger);
+        }
+        
+        .combat-log-entry.heal {
+            color: var(--success);
+        }
+        
+        .combat-log-entry.victory {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .back-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .heroes-select {
+            background: var(--card);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .hero-select-btn {
+            background: #05050a;
+            border: 1px solid #333;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .hero-select-btn:hover {
+            border-color: var(--accent);
+            transform: scale(1.02);
+        }
+        
+        .hero-select-btn.selected {
+            border-color: var(--accent);
+            background: rgba(0,242,255,0.2);
+            color: var(--accent);
+        }
+        
+        .hero-select-btn img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,242,255,0.4);
+        }
+        
+        .btn-secondary {
+            background: none;
+            border: 1px solid var(--success);
+            color: var(--success);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            background: var(--success);
+            color: #000;
+        }
+        
         .hero-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
             gap: 20px;
             padding: 10px 0;
         }
-
-        /* PAINEL DE DADOS COM GRADE DINÂMICA 3D */
-        #dice-panel { 
-            width: 650px;
-            background: var(--card); 
-            border-left: 2px solid var(--accent); 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            transition: 0.4s;
-            position: relative;
-        }
-        #dice-panel.minimized { width: 45px; padding: 10px 5px; }
-        #dice-panel.minimized > *:not(.toggle-btn) { display: none; }
-        .toggle-btn { 
-            position: absolute; 
-            left: -15px; 
-            top: 20px; 
-            width: 30px; 
-            height: 30px; 
-            background: var(--accent); 
-            color: #000; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            cursor: pointer; 
-            z-index: 100; 
-            border: none; 
-            font-weight: bold; 
-        }
-
-        /* GRADE DE DADOS 3D DINÂMICA */
-        .dice-grid-container {
-            width: 100%;
-            background: linear-gradient(135deg, #0a0a12 0%, #050508 100%);
-            border-radius: 15px;
-            border: 2px solid var(--accent);
-            overflow: hidden;
-            position: relative;
-            min-height: 450px;
-            max-height: 550px;
-            box-shadow: 0 0 30px rgba(0,242,255,0.2);
-        }
         
-        .dice-grid {
-            display: grid;
-            gap: 12px;
-            padding: 15px;
-            min-height: 100%;
-        }
-        
-        .dice-cell {
-            aspect-ratio: 1 / 1;
-            background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
-            border: 1px solid rgba(0,242,255,0.3);
-            max-width: 100%;
-            max-height: 100%;
-        }
-        
-        .dice-grid:has(.dice-cell:only-child) {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .dice-grid:has(.dice-cell:only-child) .dice-cell {
-            width: 280px;
-            height: 280px;
-            margin: auto;
-        }
-        
-        .dice-cell:hover {
-            transform: scale(1.02);
-            box-shadow: 0 0 25px rgba(0,242,255,0.5);
-            border-color: var(--accent);
-        }
-        
-        .dice-cell canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 10px;
-        }
-        
-        .dice-number-3d {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: clamp(24px, 5vw, 48px);
-            font-weight: 900;
-            color: white;
-            text-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 10px currentColor;
-            z-index: 10;
-            pointer-events: none;
-            font-family: monospace;
-            background: rgba(0,0,0,0.6);
-            padding: 6px 16px;
-            border-radius: 40px;
-            backdrop-filter: blur(8px);
-            border: 2px solid;
-            white-space: nowrap;
-            animation: numberPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        @keyframes numberPop {
-            0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
-            60% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); }
-            100% { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; }
-        }
-        
-        .dice-cell.rolling {
-            animation: diceShake 0.08s ease-in-out infinite;
-        }
-        
-        @keyframes diceShake {
-            0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
-            25% { transform: translateX(-3px) translateY(-2px) rotate(-5deg); }
-            75% { transform: translateX(3px) translateY(2px) rotate(5deg); }
-        }
-        
-        .dice-controls {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .d-btn {
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #000;
-            font-size: 14px;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .d-btn:hover {
-            transform: translateY(-2px);
-            filter: brightness(1.1);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-        .d-btn:active {
-            transform: translateY(0);
-        }
-
-        #dice-log { 
-            flex: 1; 
-            overflow-y: auto; 
-            background: #05050a; 
-            border-radius: 8px; 
-            padding: 10px; 
-            border: 1px solid #1a1a1a; 
-            font-size: 13px; 
-            margin-top: 10px; 
-            max-height: 180px;
-        }
-        .log-entry { 
-            border-bottom: 1px solid #111; 
-            padding: 6px 0; 
-            display: flex; 
-            justify-content: space-between;
-            font-size: 13px;
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        /* CARDS & MORTE */
         .char-card { 
             background: var(--card); 
             border: 1px solid var(--border); 
@@ -222,24 +342,11 @@
             transition: 0.5s; 
             position: relative;
         }
+        
         .char-card.dead { 
             filter: grayscale(0.7); 
             border-color: var(--danger); 
-            box-shadow: 0 0 20px rgba(255, 46, 99, 0.3);
             opacity: 0.8;
-        }
-        .char-card.dead::before { 
-            content: "☠️ MORTO ☠️"; 
-            position: absolute; 
-            top: 10px; 
-            right: 10px; 
-            font-size: 12px; 
-            z-index: 5;
-            background: rgba(0,0,0,0.7);
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-weight: bold;
-            color: var(--danger);
         }
         
         .card-header { 
@@ -248,11 +355,8 @@
             align-items: center; 
             gap: 15px; 
             cursor: pointer;
-            transition: 0.3s;
         }
-        .card-header:hover {
-            background: rgba(0,242,255,0.05);
-        }
+        
         .img-thumb { 
             width: 60px; 
             height: 60px; 
@@ -269,35 +373,33 @@
             border: 1px solid #333; 
             overflow: hidden; 
         }
+        
         .bar-fill { 
             height: 100%; 
             background: var(--success); 
             width: 100%; 
-            transition: width 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28), background-color 0.5s; 
+            transition: width 0.8s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
         }
-
+        
         .card-content { 
             max-height: 0; 
             overflow: hidden; 
             transition: 0.5s ease; 
             padding: 0 20px; 
         }
-        .char-card.expanded { 
-            border-color: var(--accent); 
-            box-shadow: 0 0 20px rgba(0,242,255,0.2);
-        }
+        
         .char-card.expanded .card-content { 
             max-height: 3000px; 
             padding-bottom: 20px; 
         }
-
+        
         .tab-bar { 
             display: flex; 
             gap: 10px; 
             margin: 15px 0; 
             border-bottom: 1px solid #222; 
-            overflow-x: auto; 
         }
+        
         .tab-btn { 
             background: none; 
             border: none; 
@@ -305,40 +407,30 @@
             cursor: pointer; 
             padding: 10px; 
             font-weight: bold; 
-            font-size: 11px; 
-            white-space: nowrap;
         }
+        
         .tab-btn.active { 
             color: var(--accent); 
             border-bottom: 2px solid var(--accent); 
         }
+        
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
-
-        input, textarea, select { 
-            background: #05050a; 
-            border: 1px solid #333; 
-            color: #fff; 
-            padding: 8px; 
-            border-radius: 6px; 
-            outline: none; 
-            width: 100%; 
-        }
-        input:focus { border-color: var(--accent); }
-
+        
         .attr-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
             gap: 12px; 
         }
+        
         .attr-item { 
             background: #000; 
             padding: 10px; 
             border-radius: 12px; 
-            border: 1px solid #222; 
             text-align: center; 
             position: relative;
         }
+        
         .attr-mod { 
             position: absolute; 
             top: -5px; 
@@ -348,7 +440,6 @@
             padding: 2px 8px; 
             border-radius: 5px; 
             font-size: 12px; 
-            font-weight: 900; 
         }
         
         .list-item { 
@@ -356,36 +447,9 @@
             padding: 10px; 
             border-radius: 8px; 
             margin-bottom: 8px; 
-            border: 1px solid #222; 
             border-left: 3px solid var(--accent); 
         }
         
-        .skill-damage {
-            font-size: 11px;
-            color: var(--danger);
-            margin-top: 8px;
-            padding-top: 5px;
-            border-top: 1px solid #222;
-        }
-        
-        .use-skill-btn {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-            margin-top: 8px;
-            transition: 0.2s;
-        }
-        
-        .use-skill-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 10px var(--accent);
-        }
-
         .total-sum {
             background: linear-gradient(135deg, var(--accent), #00aaff);
             color: #000;
@@ -393,130 +457,98 @@
             border-radius: 25px;
             font-weight: bold;
             font-size: 20px;
-            text-align: center;
-            display: inline-block;
-            box-shadow: 0 0 20px rgba(0,242,255,0.5);
         }
         
-        .btn-primary {
-            background: var(--accent);
-            color: #000;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 900;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,242,255,0.4);
-        }
-        
-        .btn-secondary {
-            background: none;
-            border: 1px solid var(--success);
-            color: var(--success);
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .btn-secondary:hover {
-            background: var(--success);
-            color: #000;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #05050a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 4px;
-        }
-        
-        .empty-cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #2a2a3a;
-            font-size: 32px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            border: 1px dashed #2a2a3a;
-        }
-        
-        .clear-btn {
-            color: var(--danger);
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .clear-btn:hover {
-            text-shadow: 0 0 10px var(--danger);
-        }
-        
-        .damage-preview {
-            font-size: 12px;
-            color: var(--success);
-            margin-left: 8px;
-        }
+        .dice-grid { display: grid; gap: 12px; padding: 15px; min-height: 100%; }
+        .dice-cell { aspect-ratio: 1; background: rgba(0,0,0,0.4); border-radius: 12px; position: relative; cursor: pointer; border: 1px solid rgba(0,242,255,0.3); }
+        .dice-cell canvas { width: 100%; height: 100%; border-radius: 10px; }
+        .dice-number-3d { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 48px; font-weight: 900; color: white; text-shadow: 0 0 20px black; background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 40px; border: 2px solid; white-space: nowrap; }
+        .dice-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .d-btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: #000; }
+        .dice-grid:has(.dice-cell:only-child) { display: flex; justify-content: center; align-items: center; }
+        .dice-grid:has(.dice-cell:only-child) .dice-cell { width: 280px; height: 280px; margin: auto; }
+        .clear-btn { color: var(--danger); cursor: pointer; }
+        .log-entry { border-bottom: 1px solid #111; padding: 6px 0; display: flex; justify-content: space-between; }
+        .empty-cell { display: flex; align-items: center; justify-content: center; color: #2a2a3a; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px dashed #2a2a3a; }
+        .skill-damage { margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .use-skill-btn { background: var(--accent); color: #000; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .damage-preview { font-size: 12px; color: var(--success); }
     </style>
 </head>
 <body>
+    <div class="app-container">
+        <!-- PÁGINA PRINCIPAL (RPG) -->
+        <div id="rpg-page" class="page active">
+            <div style="display: flex; width: 100%;">
+                <div id="hero-section" style="flex: 1; padding: 20px; overflow-y: auto;">
+                    <div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap;">
+                        <button class="btn-primary" onclick="addNewHero()">
+                            <i class="fas fa-plus"></i> NOVO PERSONAGEM
+                        </button>
+                        <button class="btn-secondary" onclick="saveAll()">
+                            <i class="fas fa-save"></i> SALVAR SESSÃO
+                        </button>
+                        <button class="btn-secondary" onclick="loadAll()">
+                            <i class="fas fa-folder-open"></i> CARREGAR
+                        </button>
+                        <button class="btn-secondary" onclick="openArena()">
+                            <i class="fas fa-fist-raised"></i> IR PARA ARENAS
+                        </button>
+                    </div>
+                    <div id="hero-list" class="hero-grid"></div>
+                </div>
 
-    <audio id="death-sound" src="sino-2deg.mp3" preload="auto"></audio>
-
-    <div id="hero-section">
-        <div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap;">
-            <button class="btn-primary" onclick="addNewHero()">
-                <i class="fas fa-plus"></i> NOVO PERSONAGEM
-            </button>
-            <button class="btn-secondary" onclick="saveAll()">
-                <i class="fas fa-save"></i> SALVAR SESSÃO
-            </button>
-            <button class="btn-secondary" onclick="loadAll()">
-                <i class="fas fa-folder-open"></i> CARREGAR
-            </button>
-             <button class="btn-secondary">
-                <i class="fa-regular fa-swords"></i> IR PARA ARENAS
-            </button>
+                <aside id="dice-panel" style="width: 650px; background: var(--card); border-left: 2px solid var(--accent); padding: 20px; display: flex; flex-direction: column; position: relative;">
+                    <button class="toggle-btn" onclick="toggleDice()" style="position: absolute; left: -15px; top: 20px; width: 30px; height: 30px; background: var(--accent); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;">&lt;</button>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span style="color:var(--accent); font-weight:bold;"><i class="fas fa-cubes"></i> DADOS 3D</span>
+                        <span class="total-sum" id="total-sum">Total: 0</span>
+                    </div>
+                    
+                    <div class="dice-grid-container" id="dice-grid-container" style="width:100%; background: linear-gradient(135deg, #0a0a12 0%, #050508 100%); border-radius: 15px; border: 2px solid var(--accent); overflow: hidden; min-height: 450px; max-height: 550px;">
+                        <div id="dice-grid" class="dice-grid"></div>
+                    </div>
+                    
+                    <div class="dice-controls">
+                        <button class="d-btn" style="background:#4ecca3" onclick="addDiceToGrid('d4', 4, '#4ecca3')">🎲 D4</button>
+                        <button class="d-btn" style="background:#45b7d1" onclick="addDiceToGrid('d6', 6, '#45b7d1')">🎲 D6</button>
+                        <button class="d-btn" style="background:#a29bfe" onclick="addDiceToGrid('d8', 8, '#a29bfe')">🎲 D8</button>
+                        <button class="d-btn" style="background:#ff7675" onclick="addDiceToGrid('d10', 10, '#ff7675')">🎲 D10</button>
+                        <button class="d-btn" style="background:#fdcb6e" onclick="addDiceToGrid('d12', 12, '#fdcb6e')">🎲 D12</button>
+                        <button class="d-btn" style="background:#00f2ff" onclick="addDiceToGrid('d20', 20, '#00f2ff')">🎲 D20</button>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin:10px 0; color:#888">
+                        <span><i class="fas fa-history"></i> HISTÓRICO</span>
+                        <span onclick="clearAllDice()" class="clear-btn">
+                            <i class="fas fa-trash"></i> LIMPAR TUDO
+                        </span>
+                    </div>
+                    <div id="dice-log" style="flex:1; overflow-y: auto; background: #05050a; border-radius: 8px; padding: 10px; border: 1px solid #1a1a1a; max-height: 180px;"></div>
+                </aside>
+            </div>
         </div>
-        <div id="hero-list" class="hero-grid"></div>
+
+        <!-- PÁGINA DE ARENAS -->
+        <div id="arena-page" class="page">
+            <div style="width: 100%; overflow-y: auto;">
+                <div class="nav-header">
+                    <button class="nav-btn" onclick="closeArena()">
+                        <i class="fas fa-arrow-left"></i> VOLTAR
+                    </button>
+                    <span style="flex:1; text-align:center; color:var(--accent); font-size:18px;">
+                        <i class="fas fa-fist-raised"></i> ARENAS RPG
+                    </span>
+                </div>
+
+                <div id="arena-selector" class="arena-selector"></div>
+                <div id="arena-content" class="arena-content"></div>
+            </div>
+        </div>
     </div>
 
-    <aside id="dice-panel">
-        <button class="toggle-btn" onclick="toggleDice()"> &lt; </button>
-        
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="color:var(--accent); font-weight:bold;"><i class="fas fa-cubes"></i> DADOS 3D</span>
-            <span class="total-sum" id="total-sum">Total: 0</span>
-        </div>
-        
-        <div class="dice-grid-container" id="dice-grid-container">
-            <div id="dice-grid" class="dice-grid"></div>
-        </div>
-        
-        <div class="dice-controls">
-            <button class="d-btn" style="background:#4ecca3" onclick="addDiceToGrid('d4', 4, '#4ecca3')">🎲 D4</button>
-            <button class="d-btn" style="background:#45b7d1" onclick="addDiceToGrid('d6', 6, '#45b7d1')">🎲 D6</button>
-            <button class="d-btn" style="background:#a29bfe" onclick="addDiceToGrid('d8', 8, '#a29bfe')">🎲 D8</button>
-            <button class="d-btn" style="background:#ff7675" onclick="addDiceToGrid('d10', 10, '#ff7675')">🎲 D10</button>
-            <button class="d-btn" style="background:#fdcb6e" onclick="addDiceToGrid('d12', 12, '#fdcb6e')">🎲 D12</button>
-            <button class="d-btn" style="background:#00f2ff" onclick="addDiceToGrid('d20', 20, '#00f2ff')">🎲 D20</button>
-        </div>
-        
-        <div style="display:flex; justify-content:space-between; font-size:12px; margin:10px 0; color:#888">
-            <span><i class="fas fa-history"></i> HISTÓRICO</span>
-            <span onclick="clearAllDice()" class="clear-btn">
-                <i class="fas fa-trash"></i> LIMPAR TUDO
-            </span>
-        </div>
-        <div id="dice-log"></div>
-    </aside>
+    <audio id="death-sound" src="sino-2deg.mp3" preload="auto"></audio>
 
 <script type="importmap">
     {
@@ -529,18 +561,13 @@
 <script type="module">
     import * as THREE from 'three';
     
-    // Gerenciador de estado
+    // ==================== DADOS 3D ====================
     window.HeroState = {};
-    
-    // Armazenar atributos dos personagens para cálculo de dano
     window.heroAttributes = {};
-    
-    // Sistema de Grade 3D de Dados
     let diceGridData = [];
     let nextDiceId = 0;
     let scenes = new Map();
     
-    // Geometrias dos dados
     const geos = {
         d4: new THREE.TetrahedronGeometry(0.9),
         d6: new THREE.BoxGeometry(1.0, 1.0, 1.0),
@@ -550,367 +577,180 @@
         d20: new THREE.IcosahedronGeometry(0.9, 0)
     };
     
-    // Função para calcular o modificador de um atributo
     function getAttributeModifier(attributeValue) {
         return Math.floor((parseInt(attributeValue) - 10) / 2);
     }
     
-    // Função para calcular dano baseado na fórmula
     window.calculateSkillDamage = (skillFormula, heroId) => {
         if (!heroId || !window.heroAttributes[heroId]) return 0;
-        
         const attrs = window.heroAttributes[heroId];
         let formula = skillFormula;
-        
-        // Substitui os placeholders pelos valores dos atributos
         const replacements = {
-            '{FOR}': attrs.for || 10,
-            '{DES}': attrs.des || 10,
-            '{CON}': attrs.con || 10,
-            '{INT}': attrs.int || 10,
-            '{SAB}': attrs.sab || 10,
-            '{CAR}': attrs.car || 10,
-            '{MOD_FOR}': getAttributeModifier(attrs.for || 10),
-            '{MOD_DES}': getAttributeModifier(attrs.des || 10),
-            '{MOD_CON}': getAttributeModifier(attrs.con || 10),
-            '{MOD_INT}': getAttributeModifier(attrs.int || 10),
-            '{MOD_SAB}': getAttributeModifier(attrs.sab || 10),
-            '{MOD_CAR}': getAttributeModifier(attrs.car || 10)
+            '{FOR}': attrs.for || 10, '{DES}': attrs.des || 10, '{CON}': attrs.con || 10,
+            '{INT}': attrs.int || 10, '{SAB}': attrs.sab || 10, '{CAR}': attrs.car || 10,
+            '{MOD_FOR}': getAttributeModifier(attrs.for || 10), '{MOD_DES}': getAttributeModifier(attrs.des || 10),
+            '{MOD_CON}': getAttributeModifier(attrs.con || 10), '{MOD_INT}': getAttributeModifier(attrs.int || 10),
+            '{MOD_SAB}': getAttributeModifier(attrs.sab || 10), '{MOD_CAR}': getAttributeModifier(attrs.car || 10)
         };
-        
-        for (const [key, value] of Object.entries(replacements)) {
-            formula = formula.split(key).join(value);
-        }
-        
-        // Avalia a fórmula matemática
+        for (const [key, value] of Object.entries(replacements)) formula = formula.split(key).join(value);
         try {
-            // Avalia expressões como "2d6+5" ou "1d8+MOD_FOR"
             const diceRegex = /(\d*)d(\d+)/gi;
-            let hasDice = false;
-            
             formula = formula.replace(diceRegex, (match, count, sides) => {
-                hasDice = true;
                 const numDice = count === '' ? 1 : parseInt(count);
                 let total = 0;
-                for (let i = 0; i < numDice; i++) {
-                    total += Math.floor(Math.random() * parseInt(sides)) + 1;
-                }
+                for (let i = 0; i < numDice; i++) total += Math.floor(Math.random() * parseInt(sides)) + 1;
                 return total;
             });
-            
-            if (hasDice) {
-                // Se tem dados, calcula o resultado
-                const result = eval(formula);
-                return Math.max(0, Math.floor(result));
-            } else {
-                // Se não tem dados, retorna o valor calculado
-                const result = eval(formula);
-                return Math.max(0, Math.floor(result));
-            }
-        } catch (e) {
-            console.error('Erro ao calcular dano:', e);
-            return 0;
-        }
+            return Math.max(0, Math.floor(eval(formula)));
+        } catch (e) { return 0; }
     };
     
-    // Função para usar uma skill
     window.useSkill = (heroId, skillName, skillFormula, targetHeroId = null) => {
         const damage = window.calculateSkillDamage(skillFormula, heroId);
-        
-        // Se tiver um alvo, aplica o dano
         if (targetHeroId && window.HeroState[targetHeroId] !== undefined) {
-            const currentHP = window.HeroState[targetHeroId];
-            const newHP = currentHP - damage;
+            const newHP = Math.max(0, window.HeroState[targetHeroId] - damage);
             window.HeroState[targetHeroId] = newHP;
             window.updateHP(targetHeroId, true);
-            
-            // Adiciona ao log
             const attackerName = document.getElementById(`tag-${heroId}`)?.innerText || heroId;
             const targetName = document.getElementById(`tag-${targetHeroId}`)?.innerText || targetHeroId;
-            addCombatLog(attackerName, skillName, damage, targetName);
+            addCombatLog(`${attackerName} usou ${skillName}`, `${damage} de dano em ${targetName}`, 'damage');
         } else {
-            // Apenas mostra o dano calculado
-            addCombatLog(null, skillName, damage, null);
+            addCombatLog(skillName, `${damage} de dano calculado`, 'damage');
         }
-        
         return damage;
     };
     
-    function addCombatLog(attacker, skill, damage, target) {
+    function addCombatLog(action, result, type = '') {
         const logDiv = document.getElementById('dice-log');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        if (attacker && target) {
-            entry.innerHTML = `<span><i class="fas fa-fist-raised"></i> ${attacker} usou ${skill}</span><b style="color:var(--danger);">${damage} de dano em ${target}</b>`;
-        } else {
-            entry.innerHTML = `<span><i class="fas fa-magic"></i> ${skill}</span><b style="color:var(--accent);">${damage} de dano calculado</b>`;
-        }
-        logDiv.prepend(entry);
-        
-        while(logDiv.children.length > 50) {
-            logDiv.removeChild(logDiv.lastChild);
+        if (logDiv) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span>${action}</span><b>${result}</b>`;
+            logDiv.prepend(entry);
+            while(logDiv.children.length > 50) logDiv.removeChild(logDiv.lastChild);
         }
     }
     
-    // Função para criar uma skill com cálculo automático
-    window.addSkillWithDamage = (id, n = "", formula = "1d6+{MOD_FOR}", t = "Ativa", d = "") => {
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.setAttribute('data-skill-formula', formula);
-        
-        // Obtém os atributos atuais do personagem
-        const attrs = window.heroAttributes[id] || { for: 10, des: 10, con: 10, int: 10, sab: 10, car: 10 };
-        
-        // Calcula dano atual para preview
-        const calculateCurrentDamage = () => {
-            let tempFormula = formula;
-            const modFor = getAttributeModifier(attrs.for);
-            const modDes = getAttributeModifier(attrs.des);
-            const modCon = getAttributeModifier(attrs.con);
-            const modInt = getAttributeModifier(attrs.int);
-            const modSab = getAttributeModifier(attrs.sab);
-            const modCar = getAttributeModifier(attrs.car);
-            
-            tempFormula = tempFormula.replace(/{MOD_FOR}/g, modFor);
-            tempFormula = tempFormula.replace(/{MOD_DES}/g, modDes);
-            tempFormula = tempFormula.replace(/{MOD_CON}/g, modCon);
-            tempFormula = tempFormula.replace(/{MOD_INT}/g, modInt);
-            tempFormula = tempFormula.replace(/{MOD_SAB}/g, modSab);
-            tempFormula = tempFormula.replace(/{MOD_CAR}/g, modCar);
-            tempFormula = tempFormula.replace(/{FOR}/g, attrs.for);
-            tempFormula = tempFormula.replace(/{DES}/g, attrs.des);
-            tempFormula = tempFormula.replace(/{CON}/g, attrs.con);
-            tempFormula = tempFormula.replace(/{INT}/g, attrs.int);
-            tempFormula = tempFormula.replace(/{SAB}/g, attrs.sab);
-            tempFormula = tempFormula.replace(/{CAR}/g, attrs.car);
-            
-            try {
-                const diceRegex = /(\d*)d(\d+)/gi;
-                let tempResult = tempFormula;
-                tempResult = tempResult.replace(diceRegex, (match, count, sides) => {
-                    const numDice = count === '' ? 1 : parseInt(count);
-                    let total = 0;
-                    for (let i = 0; i < numDice; i++) {
-                        total += Math.floor(Math.random() * parseInt(sides)) + 1;
+    window.addDiceToGrid = (type, sides, color) => {
+        const result = Math.floor(Math.random() * sides) + 1;
+        const newDice = { id: nextDiceId++, type, sides, color, value: result, isRolling: true, result };
+        diceGridData.push(newDice);
+        renderGrid();
+        let frames = 0;
+        const rollInterval = setInterval(() => {
+            if (frames >= 32) {
+                clearInterval(rollInterval);
+                const dice = diceGridData.find(d => d.id === newDice.id);
+                if (dice) {
+                    dice.isRolling = false;
+                    const sceneData = scenes.get(dice.id);
+                    if (sceneData?.numberLabel) {
+                        sceneData.numberLabel.innerText = dice.result;
+                        sceneData.numberLabel.style.animation = 'numberPop 0.4s ease-out';
                     }
-                    return total;
-                });
-                const result = eval(tempResult);
-                return Math.max(0, Math.floor(result));
-            } catch (e) {
-                return 0;
-            }
-        };
-        
-        const updatePreview = () => {
-            const previewSpan = div.querySelector('.damage-preview');
-            if (previewSpan) {
-                const previewDamage = calculateCurrentDamage();
-                previewSpan.innerHTML = `🎲 Dano: ${previewDamage}`;
-            }
-        };
-        
-        div.innerHTML = `
-            <div style="display:flex; gap:5px; margin-bottom:5px; flex-wrap:wrap;">
-                <input placeholder="Nome do Poder" value="${n}" class="s-n" style="flex:2" onchange="updateSkillFormula('${id}', this.parentElement.parentElement)">
-                <input placeholder="Fórmula (ex: 2d6+{MOD_FOR})" value="${formula}" class="s-formula" style="flex:2" onchange="updateSkillFormula('${id}', this.parentElement.parentElement)">
-                <select class="s-t" style="flex:1"><option ${t=='Ativa'?'selected':''}>⚡ Ativa</option><option ${t=='Passiva'?'selected':''}>🛡️ Passiva</option></select>
-                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:18px;">&times;</button>
-            </div>
-            <textarea placeholder="Descrição do poder..." class="s-d" style="min-height:40px; font-size:11px">${d}</textarea>
-            <div class="skill-damage">
-                <span class="damage-preview">🎲 Dano: ${calculateCurrentDamage()}</span>
-                <button class="use-skill-btn" onclick="useSkillFromCard('${id}', this.parentElement.parentElement)">
-                    <i class="fas fa-bolt"></i> USAR PODER
-                </button>
-            </div>
-        `;
-        
-        document.getElementById(`skill-list-${id}`).appendChild(div);
-        
-        // Atualiza preview periodicamente
-        const interval = setInterval(() => {
-            if (document.body.contains(div)) {
-                updatePreview();
+                    updateTotalSum();
+                    addCombatLog(`d${dice.sides}`, dice.result, '');
+                }
             } else {
-                clearInterval(interval);
+                const randomVal = Math.floor(Math.random() * sides) + 1;
+                const sceneData = scenes.get(newDice.id);
+                if (sceneData?.numberLabel) sceneData.numberLabel.innerText = randomVal;
+                frames++;
             }
-        }, 1000);
+        }, 38);
     };
     
-    // Função para atualizar fórmula da skill
-    window.updateSkillFormula = (heroId, skillElement) => {
-        const formulaInput = skillElement.querySelector('.s-formula');
-        if (formulaInput) {
-            const newFormula = formulaInput.value;
-            skillElement.setAttribute('data-skill-formula', newFormula);
-            
-            // Atualiza preview
-            const previewSpan = skillElement.querySelector('.damage-preview');
-            if (previewSpan) {
-                const damage = window.calculateSkillDamage(newFormula, heroId);
-                previewSpan.innerHTML = `🎲 Dano: ${damage}`;
-            }
+    window.removeDice = (id) => {
+        const sceneData = scenes.get(id);
+        if (sceneData?.animationId) cancelAnimationFrame(sceneData.animationId);
+        scenes.delete(id);
+        diceGridData = diceGridData.filter(d => d.id !== id);
+        renderGrid();
+        updateTotalSum();
+    };
+    
+    function updateTotalSum() {
+        const total = diceGridData.reduce((sum, dice) => sum + (dice.value || 0), 0);
+        const totalEl = document.getElementById('total-sum');
+        if (totalEl) totalEl.innerHTML = `Total: ${total}`;
+    }
+    
+    window.clearAllDice = () => {
+        scenes.forEach((scene, id) => { if (scene.animationId) cancelAnimationFrame(scene.animationId); });
+        scenes.clear();
+        diceGridData = [];
+        renderGrid();
+        updateTotalSum();
+        const logDiv = document.getElementById('dice-log');
+        if (logDiv) logDiv.innerHTML = '';
+    };
+    
+    window.toggleDice = () => {
+        const p = document.getElementById('dice-panel');
+        if (p) {
+            p.classList.toggle('minimized');
+            const btn = p.querySelector('.toggle-btn');
+            if (btn) btn.innerHTML = p.classList.contains('minimized') ? '>' : '<';
         }
     };
     
-    // Função para usar skill a partir do card
-    window.useSkillFromCard = (heroId, skillElement) => {
-        const skillName = skillElement.querySelector('.s-n')?.value || 'Poder';
-        const formula = skillElement.querySelector('.s-formula')?.value || '1d6';
-        
-        // Cria um seletor de alvo simples
-        const heroes = document.querySelectorAll('.char-card');
-        if (heroes.length > 1) {
-            // Se há mais de um herói, pergunta qual alvo
-            const targetOptions = Array.from(heroes).map(h => {
-                const name = h.querySelector('.i-name')?.value || h.id;
-                return { id: h.id, name };
-            }).filter(h => h.id !== heroId);
-            
-            if (targetOptions.length > 0) {
-                const targetList = targetOptions.map((t, i) => `${i + 1}. ${t.name}`).join('\n');
-                const choice = prompt(`Escolha o alvo:\n${targetList}\n\nDigite o número do alvo (ou 0 para apenas calcular):`);
-                if (choice && !isNaN(choice)) {
-                    const idx = parseInt(choice) - 1;
-                    if (targetOptions[idx]) {
-                        const damage = window.useSkill(heroId, skillName, formula, targetOptions[idx].id);
-                        alert(`${skillName} causou ${damage} de dano em ${targetOptions[idx].name}!`);
-                        return;
-                    }
-                }
-            }
+    function renderGrid() {
+        const gridContainer = document.getElementById('dice-grid');
+        if (!gridContainer) return;
+        const count = diceGridData.length;
+        if (count === 0) {
+            gridContainer.innerHTML = '<div class="empty-cell" style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; min-height:400px;"><div style="text-align:center;"><i class="fas fa-dice-d20" style="font-size:64px; color:#2a2a3a;"></i><p style="color:#666;">Clique nos dados acima</p></div></div>';
+            return;
         }
-        
-        // Se não há alvo ou escolheu apenas calcular
-        const damage = window.useSkill(heroId, skillName, formula, null);
-        alert(`${skillName} causaria ${damage} de dano!`);
-    };
-    
-    // Função para adicionar skill (compatibilidade com código antigo)
-    window.addSkill = (id, n = "", formula = "1d6+{MOD_FOR}", t = "Ativa", d = "") => {
-        window.addSkillWithDamage(id, n, formula, t, d);
-    };
-    
-    // Função para adicionar item
-    window.addItem = (id, n="", q="1", d="") => {
-        const div = document.createElement('div'); 
-        div.className = 'list-item';
-        div.style.borderLeftColor = "var(--success)";
-        div.innerHTML = `
-            <div style="display:flex; gap:5px; margin-bottom:5px; flex-wrap:wrap;">
-                <input placeholder="Nome do Item" value="${n}" class="i-n" style="flex:3">
-                <input placeholder="Qtd" value="${q}" class="i-q" style="flex:1; text-align:center">
-                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--danger); background:none; border:none; cursor:pointer; font-size:18px;">&times;</button>
-            </div>
-            <textarea placeholder="Descrição / Efeito..." class="i-d" style="min-height:30px; font-size:11px">${d}</textarea>
-        `;
-        document.getElementById(`inv-list-${id}`).appendChild(div);
-    };
-    
-    // Função para atualizar atributos e recalcular preview das skills
-    window.updateAttributesAndSkills = (id) => {
-        // Atualiza atributos armazenados
-        const card = document.getElementById(id);
-        const forVal = parseInt(card.querySelector('.i-attr[value]')?.value || card.querySelectorAll('.i-attr')[0]?.value || 10);
-        const desVal = parseInt(card.querySelectorAll('.i-attr')[1]?.value || 10);
-        const conVal = parseInt(card.querySelectorAll('.i-attr')[2]?.value || 10);
-        const intVal = parseInt(card.querySelectorAll('.i-attr')[3]?.value || 10);
-        const sabVal = parseInt(card.querySelectorAll('.i-attr')[4]?.value || 10);
-        const carVal = parseInt(card.querySelectorAll('.i-attr')[5]?.value || 10);
-        
-        window.heroAttributes[id] = {
-            for: forVal,
-            des: desVal,
-            con: conVal,
-            int: intVal,
-            sab: sabVal,
-            car: carVal
-        };
-        
-        // Atualiza preview de todas as skills
-        const skills = document.querySelectorAll(`#skill-list-${id} .list-item`);
-        skills.forEach(skill => {
-            const formulaInput = skill.querySelector('.s-formula');
-            if (formulaInput) {
-                const formula = formulaInput.value;
-                const previewSpan = skill.querySelector('.damage-preview');
-                if (previewSpan) {
-                    const damage = window.calculateSkillDamage(formula, id);
-                    previewSpan.innerHTML = `🎲 Dano: ${damage}`;
-                }
+        if (count === 1) {
+            gridContainer.style.display = 'flex';
+            gridContainer.style.justifyContent = 'center';
+            gridContainer.style.alignItems = 'center';
+            const dice = diceGridData[0];
+            gridContainer.innerHTML = `<div class="dice-cell ${dice.isRolling ? 'rolling' : ''}" data-id="${dice.id}" id="dice-cell-${dice.id}" style="width:280px; height:280px; margin:auto;" onclick="removeDice(${dice.id})"></div>`;
+        } else {
+            const cols = count <= 2 ? count : (count <= 4 ? 2 : (count <= 6 ? 3 : (count <= 9 ? 3 : 4)));
+            const rows = Math.ceil(count / cols);
+            gridContainer.style.display = 'grid';
+            gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            let html = '';
+            for (let i = 0; i < cols * rows; i++) {
+                const dice = diceGridData[i];
+                if (dice) html += `<div class="dice-cell ${dice.isRolling ? 'rolling' : ''}" data-id="${dice.id}" id="dice-cell-${dice.id}" onclick="removeDice(${dice.id})"></div>`;
+                else html += `<div class="empty-cell"><i class="fas fa-circle"></i></div>`;
             }
+            gridContainer.innerHTML = html;
+        }
+        diceGridData.forEach(dice => {
+            const cell = document.getElementById(`dice-cell-${dice.id}`);
+            if (cell) initDice3D(`dice-cell-${dice.id}`, dice);
         });
-    };
+    }
     
-    // Sobrescreve calcAttr para atualizar skills
-    const originalCalcAttr = window.calcAttr;
-    window.calcAttr = (id) => {
-        if (originalCalcAttr) originalCalcAttr(id);
-        window.updateAttributesAndSkills(id);
-    };
-    
-    // Inicializa cena 3D para um dado
     function initDice3D(cellId, dice) {
         const container = document.getElementById(cellId);
         if (!container) return;
-        
         container.innerHTML = '';
-        
         const canvas = document.createElement('canvas');
         canvas.style.width = '100%';
         canvas.style.height = '100%';
-        canvas.style.display = 'block';
         container.appendChild(canvas);
-        
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        
+        const width = container.clientWidth, height = container.clientHeight;
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
         renderer.setSize(width, height);
         renderer.setClearColor(0x0a0a12, 0);
-        renderer.shadowMap.enabled = true;
-        
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
+        const camera = new THREE.PerspectiveCamera(40, width/height, 0.1, 100);
         camera.position.set(1.5, 1.5, 2.2);
-        camera.lookAt(0, 0, 0);
-        
-        // Iluminação
+        camera.lookAt(0,0,0);
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
-        
         const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        mainLight.position.set(2, 3, 2);
-        mainLight.castShadow = true;
+        mainLight.position.set(2,3,2);
         scene.add(mainLight);
-        
-        const fillLight = new THREE.PointLight(0x4466ff, 0.4);
-        fillLight.position.set(-1.5, 1, 2);
-        scene.add(fillLight);
-        
-        const backLight = new THREE.PointLight(0xffaa66, 0.3);
-        backLight.position.set(0, 1.5, -2.5);
-        scene.add(backLight);
-        
-        const rimLight = new THREE.PointLight(0xff66aa, 0.3);
-        rimLight.position.set(1.5, 1, -2);
-        scene.add(rimLight);
-        
-        // Cria o dado
-        const material = new THREE.MeshStandardMaterial({
-            color: dice.color,
-            roughness: 0.25,
-            metalness: 0.15,
-            emissive: dice.color,
-            emissiveIntensity: 0.08
-        });
+        const material = new THREE.MeshStandardMaterial({ color: dice.color, roughness: 0.25, metalness: 0.15, emissive: dice.color, emissiveIntensity: 0.08 });
         const diceMesh = new THREE.Mesh(geos[dice.type], material);
-        diceMesh.castShadow = true;
-        diceMesh.receiveShadow = true;
         scene.add(diceMesh);
-        
-        // Número flutuante
         let numberLabel = null;
         if (dice.value) {
             numberLabel = document.createElement('div');
@@ -920,225 +760,28 @@
             numberLabel.style.color = dice.color;
             container.appendChild(numberLabel);
         }
-        
-        let animationId = null;
-        let rotX = 0, rotY = 0, rotZ = 0;
-        
+        let rotX=0, rotY=0, rotZ=0;
         function animate() {
             if (dice.isRolling) {
-                rotX += 0.12;
-                rotY += 0.15;
-                rotZ += 0.08;
-                diceMesh.rotation.x = rotX;
-                diceMesh.rotation.y = rotY;
-                diceMesh.rotation.z = rotZ;
+                rotX += 0.12; rotY += 0.15; rotZ += 0.08;
+                diceMesh.rotation.set(rotX, rotY, rotZ);
             }
             renderer.render(scene, camera);
-            animationId = requestAnimationFrame(animate);
+            requestAnimationFrame(animate);
         }
-        
         animate();
-        
-        scenes.set(dice.id, {
-            scene, camera, renderer, diceMesh, animationId, numberLabel, container, rotX, rotY, rotZ
-        });
-        
-        const resizeObserver = new ResizeObserver(() => {
-            const newWidth = container.clientWidth;
-            const newHeight = container.clientHeight;
-            renderer.setSize(newWidth, newHeight);
-            camera.aspect = newWidth / newHeight;
-            camera.updateProjectionMatrix();
-        });
-        resizeObserver.observe(container);
+        scenes.set(dice.id, { numberLabel });
     }
     
-    // Calcula layout da grade
-    function calculateGridLayout(count) {
-        if (count === 0) return { cols: 1, rows: 0 };
-        if (count === 1) return { cols: 1, rows: 1 };
-        if (count === 2) return { cols: 2, rows: 1 };
-        if (count === 3) return { cols: 3, rows: 1 };
-        if (count === 4) return { cols: 2, rows: 2 };
-        if (count <= 6) return { cols: 3, rows: 2 };
-        if (count <= 9) return { cols: 3, rows: 3 };
-        if (count <= 12) return { cols: 4, rows: 3 };
-        if (count <= 16) return { cols: 4, rows: 4 };
-        if (count <= 20) return { cols: 5, rows: 4 };
-        return { cols: Math.ceil(Math.sqrt(count)), rows: Math.ceil(count / Math.ceil(Math.sqrt(count))) };
-    }
-    
-    // Renderiza grade
-    function renderGrid() {
-        const gridContainer = document.getElementById('dice-grid');
-        const count = diceGridData.length;
-        const layout = calculateGridLayout(count);
-        
-        if (count === 0) {
-            gridContainer.innerHTML = '<div class="empty-cell" style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; min-height:400px;"><div style="text-align:center;"><i class="fas fa-dice-d20" style="font-size:64px; margin-bottom:15px; color:#2a2a3a;"></i><p style="color:#666;">Clique nos dados acima<br>para adicionar à mesa 3D</p></div></div>';
-            gridContainer.style.gridTemplateColumns = '1fr';
-            gridContainer.style.gridTemplateRows = '1fr';
-            return;
-        }
-        
-        if (count === 1) {
-            gridContainer.style.display = 'flex';
-            gridContainer.style.justifyContent = 'center';
-            gridContainer.style.alignItems = 'center';
-            gridContainer.style.minHeight = '400px';
-        } else {
-            gridContainer.style.display = 'grid';
-            gridContainer.style.gridTemplateColumns = `repeat(${layout.cols}, 1fr)`;
-            gridContainer.style.gridTemplateRows = `repeat(${layout.rows}, 1fr)`;
-            gridContainer.style.minHeight = 'auto';
-        }
-        
-        const totalCells = layout.cols * layout.rows;
-        let html = '';
-        
-        if (count === 1) {
-            const dice = diceGridData[0];
-            html = `<div class="dice-cell ${dice.isRolling ? 'rolling' : ''}" data-id="${dice.id}" id="dice-cell-${dice.id}" style="width:280px; height:280px; margin:auto;" onclick="removeDice(${dice.id})"></div>`;
-        } else {
-            for (let i = 0; i < totalCells; i++) {
-                const dice = diceGridData[i];
-                if (dice) {
-                    html += `<div class="dice-cell ${dice.isRolling ? 'rolling' : ''}" data-id="${dice.id}" id="dice-cell-${dice.id}" onclick="removeDice(${dice.id})"></div>`;
-                } else {
-                    html += `<div class="empty-cell"><i class="fas fa-circle" style="font-size:20px; opacity:0.3;"></i></div>`;
-                }
-            }
-        }
-        
-        gridContainer.innerHTML = html;
-        
-        diceGridData.forEach(dice => {
-            const cellId = `dice-cell-${dice.id}`;
-            const cell = document.getElementById(cellId);
-            if (cell) {
-                initDice3D(cellId, dice);
-            }
-        });
-        
-        updateTotalSum();
-    }
-    
-    window.addDiceToGrid = (type, sides, color) => {
-        const result = Math.floor(Math.random() * sides) + 1;
-        
-        const newDice = {
-            id: nextDiceId++,
-            type: type,
-            sides: sides,
-            color: color,
-            value: result,
-            isRolling: true,
-            result: result
-        };
-        
-        diceGridData.push(newDice);
-        renderGrid();
-        
-        let frames = 0;
-        const maxFrames = 32;
-        let rollInterval = setInterval(() => {
-            if (frames >= maxFrames) {
-                clearInterval(rollInterval);
-                
-                const dice = diceGridData.find(d => d.id === newDice.id);
-                if (dice) {
-                    dice.isRolling = false;
-                    
-                    const cell = document.getElementById(`dice-cell-${dice.id}`);
-                    if (cell) cell.classList.remove('rolling');
-                    
-                    const sceneData = scenes.get(dice.id);
-                    if (sceneData && sceneData.numberLabel) {
-                        sceneData.numberLabel.innerText = dice.result;
-                        sceneData.numberLabel.style.animation = 'none';
-                        sceneData.numberLabel.offsetHeight;
-                        sceneData.numberLabel.style.animation = 'numberPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-                    }
-                    
-                    updateTotalSum();
-                    addLog('d' + dice.sides, dice.result);
-                }
-            } else {
-                const randomVal = Math.floor(Math.random() * sides) + 1;
-                const sceneData = scenes.get(newDice.id);
-                if (sceneData && sceneData.numberLabel) {
-                    sceneData.numberLabel.innerText = randomVal;
-                }
-                frames++;
-            }
-        }, 38);
-    };
-    
-    window.removeDice = (id) => {
-        const dice = diceGridData.find(d => d.id === id);
-        if (dice) {
-            const sceneData = scenes.get(id);
-            if (sceneData) {
-                if (sceneData.animationId) cancelAnimationFrame(sceneData.animationId);
-                scenes.delete(id);
-            }
-        }
-        diceGridData = diceGridData.filter(d => d.id !== id);
-        renderGrid();
-        updateTotalSum();
-    };
-    
-    function updateTotalSum() {
-        const total = diceGridData.reduce((sum, dice) => sum + (dice.value || 0), 0);
-        const totalEl = document.getElementById('total-sum');
-        totalEl.innerHTML = `Total: ${total}`;
-        if (total > 0) {
-            totalEl.style.transform = 'scale(1.05)';
-            setTimeout(() => {
-                totalEl.style.transform = 'scale(1)';
-            }, 200);
-        }
-    }
-    
-    function addLog(type, value) {
-        const logDiv = document.getElementById('dice-log');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        entry.innerHTML = `<span><i class="fas fa-cube"></i> ${type.toUpperCase()}</span><b style="color:var(--accent); font-size:18px;">${value}</b>`;
-        logDiv.prepend(entry);
-        
-        while(logDiv.children.length > 50) {
-            logDiv.removeChild(logDiv.lastChild);
-        }
-    }
-    
-    window.clearAllDice = () => {
-        scenes.forEach((scene, id) => {
-            if (scene.animationId) cancelAnimationFrame(scene.animationId);
-        });
-        scenes.clear();
-        diceGridData = [];
-        renderGrid();
-        updateTotalSum();
-        document.getElementById('dice-log').innerHTML = '';
-    };
-    
-    window.toggleDice = () => {
-        const p = document.getElementById('dice-panel');
-        p.classList.toggle('minimized');
-        p.querySelector('.toggle-btn').innerHTML = p.classList.contains('minimized') ? '>' : '<';
-    };
-    
-    // --- SISTEMA DE PERSONAGEM ---
+    // ==================== SISTEMA DE PERSONAGEM ====================
     window.addNewHero = (data = null) => {
         const id = data ? data.id : "h_" + Date.now();
         const div = document.createElement('div');
         div.className = "char-card" + (data ? "" : " expanded");
         div.id = id;
-        
         div.innerHTML = `
             <div class="card-header" onclick="if(!event.target.closest('input')) this.parentElement.classList.toggle('expanded')">
-                <img src="${data?.img || 'https://via.placeholder.com/60'}" class="img-thumb" id="thumb-${id}">
+                <img src="${data?.img || 'https://via.placeholder.com/60?text=Hero'}" class="img-thumb" id="thumb-${id}">
                 <div style="flex:1">
                     <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px">
                         <b><span id="tag-${id}">${data?.name || 'Novo Herói'}</span> <small style="color:var(--accent); margin-left:10px" id="race-tag-${id}">${data?.race || ''}</small></b>
@@ -1147,18 +790,16 @@
                     <div class="bar-bg"><div class="bar-fill" id="bar-${id}"></div></div>
                 </div>
             </div>
-
             <div class="card-content">
                 <div class="tab-bar">
                     <button class="tab-btn active" onclick="tab(event, '${id}', 't1')">GERAL</button>
-                    <button class="tab-btn" onclick="tab(event, '${id}', 't2')">ATRIBUTOS & CLÃ</button>
+                    <button class="tab-btn" onclick="tab(event, '${id}', 't2')">ATRIBUTOS</button>
                     <button class="tab-btn" onclick="tab(event, '${id}', 't3')">HABILIDADES</button>
                     <button class="tab-btn" onclick="tab(event, '${id}', 't4')">INVENTÁRIO</button>
                 </div>
-
                 <div id="t1-${id}" class="tab-pane active">
                     <div style="display:flex; gap:15px">
-                        <img src="${data?.img || 'https://via.placeholder.com/100'}" id="img-${id}" onclick="document.getElementById('f-${id}').click()" style="width:100px; height:100px; border-radius:12px; cursor:pointer; object-fit:cover; border:1px solid #333">
+                        <img src="${data?.img || 'https://via.placeholder.com/100?text=Avatar'}" id="img-${id}" onclick="document.getElementById('f-${id}').click()" style="width:100px; height:100px; border-radius:12px; cursor:pointer; object-fit:cover;">
                         <input type="file" id="f-${id}" hidden onchange="uImg(this, '${id}')">
                         <div style="flex:1">
                             <input type="text" class="i-name" placeholder="Nome" value="${data?.name || ''}" oninput="document.getElementById('tag-${id}').innerText=this.value">
@@ -1169,103 +810,124 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="t2-${id}" class="tab-pane">
-                    <div style="background:#111; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid #222">
-                        <label style="font-size:10px; color:var(--accent)">NOME DA RAÇA / CLÃ</label>
-                        <input type="text" class="i-race" value="${data?.race || ''}" placeholder="Ex: Saiyajin, Elfo..." oninput="document.getElementById('race-tag-${id}').innerText=this.value">
-                    </div>
                     <div class="attr-grid">
                         ${['FOR','DES','CON','INT','SAB','CAR'].map((a, i) => `
                             <div class="attr-item">
                                 <span class="attr-mod" id="mod-${a}-${id}">+0</span>
-                                <label style="font-size:10px; color:var(--accent)">${a}</label>
-                                <input type="number" class="i-attr" value="${data?.attrs ? data.attrs[i] : 10}" oninput="calcAttr('${id}')" style="text-align:center; font-size:18px; font-weight:bold; background:none; border:none; margin-bottom:4px">
-                                <input type="number" class="i-rb" value="${data?.rb ? data.rb[i] : 0}" oninput="calcAttr('${id}')" style="height:22px; font-size:10px; text-align:center" placeholder="+ Raça">
+                                <label>${a}</label>
+                                <input type="number" class="i-attr" value="${data?.attrs ? data.attrs[i] : 10}" oninput="calcAttr('${id}')" style="text-align:center; font-size:18px; font-weight:bold; background:none; border:none;">
+                                <input type="number" class="i-rb" value="${data?.rb ? data.rb[i] : 0}" oninput="calcAttr('${id}')" style="height:22px; font-size:10px; text-align:center" placeholder="Bônus">
                             </div>
                         `).join('')}
                     </div>
                 </div>
-
-                <div id="t3-${id}" class="tab-pane">
-                    <div id="skill-list-${id}"></div>
-                    <button onclick="addSkill('${id}')" style="width:100%; padding:10px; background:#111; color:var(--accent); border:1px dashed #444; border-radius:8px; cursor:pointer; margin-top:10px">
-                        <i class="fas fa-plus"></i> NOVO PODER/HABILIDADE
-                    </button>
-                </div>
-
-                <div id="t4-${id}" class="tab-pane">
-                    <div id="inv-list-${id}"></div>
-                    <button onclick="addItem('${id}')" style="width:100%; padding:10px; background:#111; color:var(--success); border:1px dashed #444; border-radius:8px; cursor:pointer; margin-top:10px">
-                        <i class="fas fa-plus"></i> ADICIONAR ITEM
-                    </button>
-                </div>
-
-                <button onclick="delHero('${id}')" style="margin-top:20px; color:var(--danger); background:none; border:none; cursor:pointer; font-size:10px; opacity:0.5">EXCLUIR PERSONAGEM</button>
+                <div id="t3-${id}" class="tab-pane"><div id="skill-list-${id}"></div><button onclick="addSkill('${id}')" style="width:100%; padding:10px; background:#111; color:var(--accent); cursor:pointer; margin-top:10px;">+ NOVO PODER</button></div>
+                <div id="t4-${id}" class="tab-pane"><div id="inv-list-${id}"></div><button onclick="addItem('${id}')" style="width:100%; padding:10px; background:#111; color:var(--success); cursor:pointer; margin-top:10px;">+ ADICIONAR ITEM</button></div>
+                <button onclick="delHero('${id}')" style="margin-top:20px; color:var(--danger); background:none; border:none; cursor:pointer;">EXCLUIR</button>
             </div>`;
-        
         document.getElementById('hero-list').prepend(div);
-        
         window.HeroState[id] = data ? parseInt(data.cur) : 100;
-        
-        // Inicializa atributos
-        const attrs = data?.attrs || [10, 10, 10, 10, 10, 10];
-        window.heroAttributes[id] = {
-            for: attrs[0],
-            des: attrs[1],
-            con: attrs[2],
-            int: attrs[3],
-            sab: attrs[4],
-            car: attrs[5]
-        };
-        
-        if(data?.skills) data.skills.forEach(s => addSkill(id, s.n, s.c || "1d6+{MOD_FOR}", s.t, s.d));
+        window.heroAttributes[id] = { for:10, des:10, con:10, int:10, sab:10, car:10 };
+        if(data?.skills) data.skills.forEach(s => addSkill(id, s.n, s.c, s.t, s.d));
         if(data?.inventory) data.inventory.forEach(i => addItem(id, i.n, i.q, i.d));
-        
         calcAttr(id);
         updateHP(id, false);
     };
     
-    // Funções de HP e combate
+    window.addSkill = (id, n = "", formula = "1d6+{MOD_FOR}", t = "Ativa", d = "") => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `
+            <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                <input placeholder="Nome" value="${n}" class="s-n" style="flex:2">
+                <input placeholder="Fórmula (ex: 2d6+{MOD_FOR})" value="${formula}" class="s-formula" style="flex:2">
+                <select class="s-t"><option ${t=='Ativa'?'selected':''}>Ativa</option><option ${t=='Passiva'?'selected':''}>Passiva</option></select>
+                <button onclick="this.parentElement.parentElement.remove()" style="color:var(--danger);">&times;</button>
+            </div>
+            <textarea placeholder="Descrição" class="s-d" style="min-height:40px; font-size:11px">${d}</textarea>
+            <div class="skill-damage">
+                <span class="damage-preview">🎲 Dano: calculando...</span>
+                <button class="use-skill-btn" onclick="useSkillFromCard('${id}', this.parentElement.parentElement)">USAR PODER</button>
+            </div>`;
+        document.getElementById(`skill-list-${id}`).appendChild(div);
+        window.updateSkillPreview(id, div);
+    };
+    
+    window.updateSkillPreview = (heroId, skillElement) => {
+        const formula = skillElement.querySelector('.s-formula')?.value || '1d6';
+        const damage = window.calculateSkillDamage(formula, heroId);
+        const previewSpan = skillElement.querySelector('.damage-preview');
+        if (previewSpan) previewSpan.innerHTML = `🎲 Dano: ${damage}`;
+    };
+    
+    window.useSkillFromCard = (heroId, skillElement) => {
+        const skillName = skillElement.querySelector('.s-n')?.value || 'Poder';
+        const formula = skillElement.querySelector('.s-formula')?.value || '1d6';
+        const heroes = document.querySelectorAll('.char-card');
+        const targetOptions = Array.from(heroes).map(h => ({ id: h.id, name: h.querySelector('.i-name')?.value || h.id })).filter(h => h.id !== heroId);
+        if (targetOptions.length > 0) {
+            const targetList = targetOptions.map((t, i) => `${i+1}. ${t.name}`).join('\n');
+            const choice = prompt(`Escolha o alvo:\n${targetList}\n\nDigite o número:`);
+            if (choice && !isNaN(choice)) {
+                const idx = parseInt(choice)-1;
+                if (targetOptions[idx]) {
+                    const damage = window.useSkill(heroId, skillName, formula, targetOptions[idx].id);
+                    alert(`${skillName} causou ${damage} de dano em ${targetOptions[idx].name}!`);
+                    return;
+                }
+            }
+        }
+        const damage = window.useSkill(heroId, skillName, formula, null);
+        alert(`${skillName} causaria ${damage} de dano!`);
+    };
+    
+    window.addItem = (id, n="", q="1", d="") => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.style.borderLeftColor = "var(--success)";
+        div.innerHTML = `<div style="display:flex; gap:5px;"><input placeholder="Item" value="${n}" class="i-n" style="flex:3"><input placeholder="Qtd" value="${q}" class="i-q" style="flex:1"><button onclick="this.parentElement.parentElement.remove()" style="color:var(--danger);">&times;</button></div><textarea placeholder="Descrição" class="i-d" style="min-height:30px;">${d}</textarea>`;
+        document.getElementById(`inv-list-${id}`).appendChild(div);
+    };
+    
     window.updateHP = (id, playSound = true) => {
-        const card = document.getElementById(id);
         const max = parseInt(document.getElementById(`max-${id}`).value) || 1;
         let cur = window.HeroState[id];
         if(cur > max) cur = max;
-        
         const pct = (cur / max) * 100;
         const barFill = document.getElementById(`bar-${id}`);
-        
-        barFill.style.width = Math.max(0, pct) + "%";
-        document.getElementById(`txt-${id}`).innerText = `${cur} / ${max}`;
-
-        if(pct > 50) barFill.style.backgroundColor = "var(--success)";
-        else if(pct > 25) barFill.style.backgroundColor = "var(--warn)";
-        else barFill.style.backgroundColor = "var(--danger)";
-
-        if(cur <= 0) {
-            if(!card.classList.contains('dead')) {
-                card.classList.add('dead');
-                if(playSound) document.getElementById('death-sound').play().catch(()=>{});
-            }
-        } else {
-            card.classList.remove('dead');
-        }
+        if(barFill) barFill.style.width = Math.max(0, pct) + "%";
+        const txtSpan = document.getElementById(`txt-${id}`);
+        if(txtSpan) txtSpan.innerText = `${cur} / ${max}`;
+        const card = document.getElementById(id);
+        if(cur <= 0 && !card.classList.contains('dead')) {
+            card.classList.add('dead');
+            if(playSound) document.getElementById('death-sound').play().catch(()=>{});
+        } else if(cur > 0) card.classList.remove('dead');
+    };
+    
+    window.calcAttr = (id) => {
+        const card = document.getElementById(id);
+        const bases = card.querySelectorAll('.i-attr');
+        const bonus = card.querySelectorAll('.i-rb');
+        const labels = ['FOR','DES','CON','INT','SAB','CAR'];
+        bases.forEach((el, i) => {
+            const total = (parseInt(el.value) || 0) + (parseInt(bonus[i].value) || 0);
+            const mod = Math.floor((total - 10) / 2);
+            document.getElementById(`mod-${labels[i]}-${id}`).innerText = (mod >= 0 ? "+" : "") + mod;
+            window.heroAttributes[id][labels[i].toLowerCase()] = total;
+        });
+        document.querySelectorAll(`#skill-list-${id} .list-item`).forEach(skill => window.updateSkillPreview(id, skill));
     };
     
     window.combat = (e, id) => {
         if(e.key === 'Enter') {
-            let v = e.target.value.trim(); 
+            let v = e.target.value.trim();
             let c = window.HeroState[id];
-            
-            if(v.startsWith('+') || v.startsWith('-')) {
-                c += parseInt(v) || 0; 
-            } else {
-                c = parseInt(v) || c;
-            }
-            
-            window.HeroState[id] = c; 
-            updateHP(id, true); 
+            if(v.startsWith('+') || v.startsWith('-')) c += parseInt(v) || 0;
+            else c = parseInt(v) || c;
+            window.HeroState[id] = c;
+            window.updateHP(id, true);
             e.target.value = "";
         }
     };
@@ -1286,80 +948,233 @@
         }
     };
     
-    window.changeMax = (id) => { 
-        updateHP(id, false); 
-    };
-    
-    window.delHero = (id) => { 
-        if(confirm("Apagar permanentemente este personagem?")) {
-            document.getElementById(id).remove();
-            delete window.HeroState[id];
-            delete window.heroAttributes[id];
-        }
-    };
-    
+    window.changeMax = (id) => { window.updateHP(id, false); };
+    window.delHero = (id) => { if(confirm("Apagar permanentemente?")) { document.getElementById(id).remove(); delete window.HeroState[id]; delete window.heroAttributes[id]; } };
     window.saveAll = () => {
         const data = [];
         document.querySelectorAll('.char-card').forEach(c => {
-            const skills = []; 
-            c.querySelectorAll('#skill-list-'+c.id+' .list-item').forEach(s => {
-                const formulaInput = s.querySelector('.s-formula');
-                skills.push({
-                    n: s.querySelector('.s-n').value, 
-                    c: formulaInput ? formulaInput.value : "1d6",
-                    t: s.querySelector('.s-t').value, 
-                    d: s.querySelector('.s-d').value
-                });
-            });
-            
-            const inventory = []; 
-            c.querySelectorAll('#inv-list-'+c.id+' .list-item').forEach(i => inventory.push({
-                n: i.querySelector('.i-n').value, 
-                q: i.querySelector('.i-q').value, 
-                d: i.querySelector('.i-d').value
-            }));
-            
-            const attrs = []; 
-            c.querySelectorAll('.i-attr').forEach(i => attrs.push(i.value));
-            
-            const rb = []; 
-            c.querySelectorAll('.i-rb').forEach(i => rb.push(i.value));
-            
-            data.push({ 
-                id: c.id, 
-                name: c.querySelector('.i-name').value, 
-                race: c.querySelector('.i-race').value, 
-                max: c.querySelector('.i-max').value, 
-                cur: window.HeroState[c.id], 
-                img: c.querySelector('.img-thumb').src, 
-                attrs, 
-                rb, 
-                skills, 
-                inventory 
-            });
+            const skills = [];
+            c.querySelectorAll('#skill-list-'+c.id+' .list-item').forEach(s => skills.push({ n: s.querySelector('.s-n').value, c: s.querySelector('.s-formula').value, t: s.querySelector('.s-t').value, d: s.querySelector('.s-d').value }));
+            const inventory = [];
+            c.querySelectorAll('#inv-list-'+c.id+' .list-item').forEach(i => inventory.push({ n: i.querySelector('.i-n').value, q: i.querySelector('.i-q').value, d: i.querySelector('.i-d').value }));
+            const attrs = []; c.querySelectorAll('.i-attr').forEach(i => attrs.push(i.value));
+            const rb = []; c.querySelectorAll('.i-rb').forEach(i => rb.push(i.value));
+            data.push({ id: c.id, name: c.querySelector('.i-name').value, race: c.querySelector('.i-race')?.value || '', max: c.querySelector('.i-max').value, cur: window.HeroState[c.id], img: c.querySelector('.img-thumb').src, attrs, rb, skills, inventory });
         });
-        localStorage.setItem('nexus_3d_grid_v5', JSON.stringify(data));
-        alert("✅ Sessão Salva com Sucesso!");
+        localStorage.setItem('nexus_arena_v2', JSON.stringify(data));
+        alert("✅ Sessão Salva!");
+    };
+    window.loadAll = () => {
+        const saved = localStorage.getItem('nexus_arena_v2');
+        if(saved) { document.getElementById('hero-list').innerHTML = ''; JSON.parse(saved).reverse().forEach(d => addNewHero(d)); alert("📀 Personagens carregados!"); }
+        else alert("Nenhum save encontrado.");
     };
     
-    window.loadAll = () => {
-        const saved = localStorage.getItem('nexus_3d_grid_v5');
-        if(saved) {
-            document.getElementById('hero-list').innerHTML = '';
-            JSON.parse(saved).reverse().forEach(d => addNewHero(d));
-            alert("📀 Personagens carregados!");
-        } else {
-            alert("ℹ️ Nenhum save encontrado.");
+    // ==================== SISTEMA DE ARENAS ====================
+    const arenas = [
+        { id: 1, name: "Arena da Floresta", icon: "🌲", desc: "Combate na floresta sombria", boss: { name: "Lobo Sombrio", hp: 80, maxHp: 80, avatar: "🐺", skills: ["Mordida", "Garras"] } },
+        { id: 2, name: "Arena Vulcânica", icon: "🌋", desc: "Lutas no coração do vulcão", boss: { name: "Dragão de Fogo", hp: 150, maxHp: 150, avatar: "🐉", skills: ["Bafo de Fogo", "Garra Flamejante"] } },
+        { id: 3, name: "Arena Glacial", icon: "❄️", desc: "Terreno congelante", boss: { name: "Gigante de Gelo", hp: 120, maxHp: 120, avatar: "🧊", skills: ["Sopro Gelado", "Martelo de Gelo"] } },
+        { id: 4, name: "Arena das Trevas", icon: "🌙", desc: "Reino das sombras", boss: { name: "Cavaleiro Negro", hp: 100, maxHp: 100, avatar: "⚔️", skills: ["Golpe Sombrio", "Névoa Negra"] } },
+        { id: 5, name: "Coliseu Sagrado", icon: "🏛️", desc: "O desafio dos campeões", boss: { name: "Guerreiro Divino", hp: 200, maxHp: 200, avatar: "👑", skills: ["Fúria Divina", "Escudo Sagrado"] } }
+    ];
+    
+    let currentArena = null;
+    let selectedHero = null;
+    let currentBoss = null;
+    
+    function renderArenas() {
+        const container = document.getElementById('arena-selector');
+        if (!container) return;
+        container.innerHTML = arenas.map(arena => `
+            <div class="arena-card" onclick="selectArena(${arena.id})">
+                <div class="arena-icon">${arena.icon}</div>
+                <div class="arena-name">${arena.name}</div>
+                <div class="arena-desc">${arena.desc}</div>
+                <div class="arena-desc" style="color:var(--danger);">❤️ ${arena.boss.hp} HP</div>
+            </div>
+        `).join('');
+    }
+    
+    window.selectArena = (arenaId) => {
+        currentArena = arenas.find(a => a.id === arenaId);
+        if (!currentArena) return;
+        currentBoss = { ...currentArena.boss, currentHp: currentArena.boss.hp };
+        renderBattleArea();
+    };
+    
+    function getHeroesList() {
+        return Array.from(document.querySelectorAll('.char-card')).map(card => ({
+            id: card.id,
+            name: card.querySelector('.i-name')?.value || card.id,
+            hp: window.HeroState[card.id] || 100,
+            maxHp: parseInt(card.querySelector('.i-max')?.value || 100),
+            avatar: card.querySelector('.img-thumb')?.src || 'https://via.placeholder.com/60'
+        }));
+    }
+    
+    function renderBattleArea() {
+        const container = document.getElementById('arena-content');
+        if (!container || !currentArena) return;
+        
+        const heroes = getHeroesList();
+        
+        container.innerHTML = `
+            <button class="back-btn" onclick="backToArenaSelect()"><i class="fas fa-arrow-left"></i> Voltar às Arenas</button>
+            <div class="heroes-select">
+                <span style="margin-right:10px;"><i class="fas fa-user"></i> Escolha seu herói:</span>
+                ${heroes.length === 0 ? '<span style="color:#888;">Nenhum personagem criado. Volte e crie um!</span>' : heroes.map(hero => `
+                    <button class="hero-select-btn ${selectedHero === hero.id ? 'selected' : ''}" onclick="selectHero('${hero.id}')">
+                        <img src="${hero.avatar}" onerror="this.src='https://via.placeholder.com/30'"> 
+                        ${hero.name} (${hero.hp}/${hero.maxHp} HP)
+                    </button>
+                `).join('')}
+            </div>
+            <div class="battle-area">
+                <div class="combatant-card player">
+                    <div class="combatant-avatar">
+                        ${selectedHero ? `<img src="${heroes.find(h => h.id === selectedHero)?.avatar}" onerror="this.src='https://via.placeholder.com/100'">` : '❓'}
+                    </div>
+                    <div class="combatant-name">${selectedHero ? (heroes.find(h => h.id === selectedHero)?.name || 'Herói') : 'Selecione um herói'}</div>
+                    ${selectedHero ? `
+                        <div class="combatant-hp">
+                            <div class="combatant-hp-bar" style="width: ${(heroes.find(h => h.id === selectedHero)?.hp / heroes.find(h => h.id === selectedHero)?.maxHp * 100)}%"></div>
+                        </div>
+                        <div class="combatant-hp-text">${heroes.find(h => h.id === selectedHero)?.hp} / ${heroes.find(h => h.id === selectedHero)?.maxHp}</div>
+                        <div class="combat-skills" id="hero-skills-${selectedHero}"></div>
+                    ` : '<div style="margin-top:20px; color:#888;">Selecione um herói acima para começar</div>'}
+                </div>
+                <div class="combatant-card enemy">
+                    <div class="combatant-avatar">${currentArena.boss.avatar}</div>
+                    <div class="combatant-name">${currentArena.boss.name}</div>
+                    <div class="combatant-hp">
+                        <div class="combatant-hp-bar" id="boss-hp-bar" style="width: ${(currentBoss.currentHp / currentBoss.maxHp) * 100}%"></div>
+                    </div>
+                    <div class="combatant-hp-text"><span id="boss-hp-text">${currentBoss.currentHp}</span> / ${currentBoss.maxHp}</div>
+                    <div class="combat-skills">
+                        ${currentArena.boss.skills.map(skill => `
+                            <button class="combat-skill-btn" onclick="bossAttack('${skill}')">${skill}</button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            <div class="combat-log" id="arena-log"></div>
+        `;
+        
+        if (selectedHero) {
+            loadHeroSkills(selectedHero);
+        }
+    }
+    
+    function loadHeroSkills(heroId) {
+        const container = document.getElementById(`hero-skills-${heroId}`);
+        if (!container) return;
+        const skills = document.querySelectorAll(`#skill-list-${heroId} .list-item`);
+        if (skills.length === 0) {
+            container.innerHTML = '<div style="color:#888; text-align:center;">Nenhuma habilidade. Crie uma na aba HABILIDADES!</div>';
+            return;
+        }
+        container.innerHTML = Array.from(skills).map(skill => {
+            const name = skill.querySelector('.s-n')?.value || 'Poder';
+            const formula = skill.querySelector('.s-formula')?.value || '1d6';
+            return `<button class="combat-skill-btn" onclick="heroAttack('${heroId}', '${name}', '${formula.replace(/'/g, "\\'")}')">${name}</button>`;
+        }).join('');
+    }
+    
+    window.selectHero = (heroId) => {
+        selectedHero = heroId;
+        renderBattleArea();
+    };
+    
+    window.heroAttack = (heroId, skillName, formula) => {
+        if (!currentBoss || currentBoss.currentHp <= 0) {
+            addArenaLog("❌ O inimigo já foi derrotado!", 'damage');
+            return;
+        }
+        const damage = window.calculateSkillDamage(formula, heroId);
+        currentBoss.currentHp = Math.max(0, currentBoss.currentHp - damage);
+        updateBossHp();
+        addArenaLog(`⚔️ ${getHeroName(heroId)} usou ${skillName} e causou ${damage} de dano em ${currentArena.boss.name}!`, 'damage');
+        
+        if (currentBoss.currentHp <= 0) {
+            addArenaLog(`🏆 VITÓRIA! ${currentArena.boss.name} foi derrotado! 🏆`, 'victory');
+            addArenaLog(`✨ ${getHeroName(heroId)} ganhou 100 XP! ✨`, 'heal');
+            setTimeout(() => backToArenaSelect(), 3000);
         }
     };
     
-    // Inicializa
-    renderGrid();
+    window.bossAttack = (skillName) => {
+        if (!selectedHero) {
+            addArenaLog("⚠️ Escolha um herói primeiro!", 'damage');
+            return;
+        }
+        const heroHp = window.HeroState[selectedHero];
+        if (heroHp <= 0) {
+            addArenaLog(`💀 ${getHeroName(selectedHero)} já está derrotado!`, 'damage');
+            return;
+        }
+        const damage = Math.floor(Math.random() * 20) + 10;
+        const newHp = Math.max(0, heroHp - damage);
+        window.HeroState[selectedHero] = newHp;
+        window.updateHP(selectedHero, true);
+        addArenaLog(`😈 ${currentArena.boss.name} usou ${skillName} e causou ${damage} de dano em ${getHeroName(selectedHero)}!`, 'damage');
+        
+        if (newHp <= 0) {
+            addArenaLog(`💀 ${getHeroName(selectedHero)} foi derrotado! Volte e tente novamente! 💀`, 'damage');
+            selectedHero = null;
+            setTimeout(() => renderBattleArea(), 2000);
+        }
+    };
     
-    const saved = localStorage.getItem('nexus_3d_grid_v5');
-    if(saved) {
-        JSON.parse(saved).reverse().forEach(d => addNewHero(d));
+    function updateBossHp() {
+        const bar = document.getElementById('boss-hp-bar');
+        const text = document.getElementById('boss-hp-text');
+        if (bar) bar.style.width = `${(currentBoss.currentHp / currentBoss.maxHp) * 100}%`;
+        if (text) text.innerText = currentBoss.currentHp;
     }
+    
+    function addArenaLog(message, type = '') {
+        const logDiv = document.getElementById('arena-log');
+        if (logDiv) {
+            const entry = document.createElement('div');
+            entry.className = `combat-log-entry ${type}`;
+            entry.innerHTML = `<i class="fas ${type === 'victory' ? 'fa-trophy' : (type === 'heal' ? 'fa-star' : 'fa-skull')}"></i> ${message}`;
+            logDiv.prepend(entry);
+            while(logDiv.children.length > 50) logDiv.removeChild(logDiv.lastChild);
+        }
+    }
+    
+    function getHeroName(heroId) {
+        const card = document.getElementById(heroId);
+        return card?.querySelector('.i-name')?.value || heroId;
+    }
+    
+    window.backToArenaSelect = () => {
+        currentArena = null;
+        selectedHero = null;
+        currentBoss = null;
+        renderArenas();
+        const content = document.getElementById('arena-content');
+        if (content) content.innerHTML = '<div style="text-align: center; padding: 100px 20px;"><i class="fas fa-dragon" style="font-size: 80px; color: var(--accent); margin-bottom: 20px;"></i><p style="color:#888;">Selecione uma arena acima para começar o combate!</p></div>';
+    };
+    
+    window.openArena = () => {
+        document.getElementById('rpg-page').classList.remove('active');
+        document.getElementById('arena-page').classList.add('active');
+        renderArenas();
+    };
+    
+    window.closeArena = () => {
+        document.getElementById('rpg-page').classList.add('active');
+        document.getElementById('arena-page').classList.remove('active');
+        backToArenaSelect();
+    };
+    
+    // Inicialização
+    renderGrid();
+    const saved = localStorage.getItem('nexus_arena_v2');
+    if(saved) JSON.parse(saved).reverse().forEach(d => addNewHero(d));
+    else addNewHero();
 </script>
 </body>
 </html>
